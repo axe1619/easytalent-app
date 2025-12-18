@@ -51,7 +51,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     } else {
       // Fallback a navegación si no hay casos de uso
-      Navigator.pushNamed(context, AppRoutes.notificationsList);
+      Navigator.pushNamed(context, AppRoutes.home);
     }
   }
 

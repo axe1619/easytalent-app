@@ -16,7 +16,6 @@ import '../../horilla_leave/my_leave_request.dart';
 import '../../horilla_leave/selected_leave_type.dart';
 import '../../horilla_main/login.dart';
 import '../../horilla_main/home.dart';
-import '../../horilla_main/notifications_list.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -36,7 +35,6 @@ class AppRoutes {
   static const String leaveAllocationRequest = '/leave_allocation_request';
   static const String allAssignedLeave = '/all_assigned_leave';
   static const String selectedLeaveType = '/selected_leave_type';
-  static const String notificationsList = '/notifications_list';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -57,7 +55,6 @@ class AppRoutes {
       leaveAllocationRequest: (context) => LeaveAllocationRequest(),
       allAssignedLeave: (context) => AllAssignedLeave(),
       selectedLeaveType: (context) => SelectedLeaveType(),
-      notificationsList: (context) => NotificationsList(),
     };
   }
 }

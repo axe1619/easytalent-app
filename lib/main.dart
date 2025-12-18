@@ -8,21 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'attendance_views/attendance_attendance.dart';
-import 'attendance_views/attendance_overview.dart';
-import 'attendance_views/attendance_request.dart';
-import 'attendance_views/hour_account.dart';
-import 'attendance_views/my_attendance_view.dart';
-import 'checkin_checkout/checkin_checkout_views/checkin_checkout_form.dart';
-import 'employee_views/employee_form.dart';
-import 'employee_views/employee_list.dart';
-import 'horilla_leave/all_assigned_leave.dart';
-import 'horilla_leave/leave_allocation_request.dart';
-import 'horilla_leave/leave_overview.dart';
-import 'horilla_leave/leave_request.dart';
-import 'horilla_leave/leave_types.dart';
-import 'horilla_leave/my_leave_request.dart';
-import 'horilla_leave/selected_leave_type.dart';
 import 'horilla_main/login.dart';
 import 'horilla_main/home.dart';
 import 'horilla_main/notifications_list.dart';
@@ -69,7 +54,7 @@ Future<void> main() async {
     onDidReceiveNotificationResponse: (NotificationResponse details) async {
       final context = navigatorKey.currentState?.context;
       if (context != null && isAuthenticated) {
-        Navigator.pushNamed(context, AppRoutes.notificationsList);
+        Navigator.pushNamed(context, AppRoutes.home);
         await notificationManagerService.markAllAsRead();
       }
     },
