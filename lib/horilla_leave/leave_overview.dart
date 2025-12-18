@@ -376,62 +376,56 @@ class _LeaveOverview extends State<LeaveOverview> {
       customMenuItems: leaveMenuItems,
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-          child: isLoading
-              ? _buildShimmerEffect(context)
-              : ListView(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LeaveRequest()),
-                        );
-                      },
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (constraints.maxWidth >= 600) {
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: _buildGridItem(context, 'NUEVA\nSOLICITUD\n',
-                                      ' $newRequestsCount'),
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+              child: isLoading
+                  ? _buildShimmerEffect(context)
+                  : ListView(
+                      children: [
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth >= 600) {
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildGridItem(context, 'Nueva\nSolicitud\n',
+                                        ' $newRequestsCount'),
+                                  ),
+                                  const SizedBox(width: 10.0),
+                                  Expanded(
+                                    child: _buildGridItem(
+                                        context,
+                                        'Solicitud\nAprobada\n',
+                                        ' $newApprovedRequestsCount'),
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return GridView.builder(
+                                shrinkWrap: true,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 5.0,
+                                  mainAxisSpacing: 5.0,
                                 ),
-                                const SizedBox(width: 10.0),
-                                Expanded(
-                                  child: _buildGridItem(
-                                      context,
-                                      'SOLICITUD\nAPROBADA\n',
-                                      ' $newApprovedRequestsCount'),
-                                ),
-                              ],
-                            );
-                          } else {
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 5.0,
-                                mainAxisSpacing: 5.0,
-                              ),
-                              itemCount: 2,
-                              itemBuilder: (context, index) {
-                                String headerText = index == 0
-                                    ? 'NUEVA\nSOLICITUD\n'
-                                    : 'SOLICITUD\nAPROBADA\n';
-                                String valueText = index == 0
-                                    ? ' $newRequestsCount'
-                                    : ' $newApprovedRequestsCount';
-                                return _buildGridItem(
-                                    context, headerText, valueText);
-                              },
-                            );
-                          }
-                        },
-                      ),
-                    ),
+                                itemCount: 2,
+                                itemBuilder: (context, index) {
+                                  String headerText = index == 0
+                                      ? 'Nueva\nSolicitud\n'
+                                      : 'Solicitud\nAprobada\n';
+                                  String valueText = index == 0
+                                      ? ' $newRequestsCount'
+                                      : ' $newApprovedRequestsCount';
+                                  return _buildGridItem(
+                                      context, headerText, valueText);
+                                },
+                              );
+                            }
+                          },
+                        ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     Container(
                       decoration: BoxDecoration(
@@ -588,6 +582,28 @@ class _LeaveOverview extends State<LeaveOverview> {
                     ),
                   ],
                 ),
+            ),
+            // Botón flotante para crear nueva solicitud
+            if (!isLoading)
+              Positioned(
+                bottom: 80,
+                right: 16,
+                child: FloatingActionButton.extended(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LeaveRequest()),
+                    );
+                  },
+                  backgroundColor: primaryColor,
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'Nueva Solicitud',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+          ],
         ),
         bottomNavigationBar: CustomBottomNavBar(
           currentIndex: currentIndex,

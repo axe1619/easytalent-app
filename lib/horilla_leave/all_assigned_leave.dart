@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multiselect_dropdown_flutter/multiselect_dropdown_flutter.dart';
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../res/utilities/drawer_wrapper.dart';
+import '../../res/utilities/custom_bottom_nav_bar.dart';
+import '../../core/routes/app_routes.dart';
 
 class AllAssignedLeave extends StatefulWidget {
   const AllAssignedLeave({super.key});
@@ -15,9 +17,7 @@ class AllAssignedLeave extends StatefulWidget {
 }
 
 class _AllAssignedLeave extends State<AllAssignedLeave> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _controller = NotchBottomBarController(index: -1);
-  final List<Widget> bottomBarPages = [];
+  int currentIndex = 0;
   List<Map<String, dynamic>> leaveType = [];
   List<dynamic> leaveTypes = [];
   List<Map<String, dynamic>> requestsEmployeesName = [];
@@ -38,10 +38,8 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   var employeeItemsId = [];
   var leaveItemsId = [];
   int? selectedLeaveId;
-  int maxCount = 5;
   bool isLoading = true;
   bool isAction = true;
-  bool _isShimmer = true;
   bool _isShimmerVisible = true;
   bool permissionLeaveTypeCheck = false;
   bool permissionLeaveAssignCheck = false;
@@ -52,7 +50,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   String searchText = '';
   String? selectedLeaveType;
   late String baseUrl = '';
-  late Map<String, dynamic> arguments;
+  Map<String, dynamic> arguments = {};
   late String getToken = '';
 
 
@@ -60,6 +58,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   void initState() {
     super.initState();
     leaveType.clear();
+    checkPermissions();
     getLeaveType();
     getAssignedLeaveType();
     getLeaveTypes();
@@ -88,7 +87,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   Future<void> _simulateLoading() async {
     await Future.delayed(const Duration(seconds: 20));
     setState(() {
-      _isShimmer = false;
+      _isShimmerVisible = false;
     });
   }
 
@@ -250,7 +249,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
           allEmployeeList.addAll(List<Map<String, dynamic>>.from(results));
         });
       } else {
-        print('Error fetching employees: ${response.statusCode}');
+        print('Error al obtener empleados: ${response.statusCode}');
         break;
       }
     }
@@ -305,7 +304,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Leave Assigned Successfully",
+                      "Permiso Asignado Exitosamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -356,7 +355,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Assign Leaves'),
+                      const Text('Asignar Permisos'),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.grey),
                         onPressed: () {
@@ -378,7 +377,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                           SizedBox(
                               height:
                               MediaQuery.of(context).size.height * 0.01),
-                          const Text("Leave Type"),
+                          const Text("Tipo de Permiso"),
                           MultiSelectDropdown.simpleList(
                             list: leaveItems,
                             initiallySelected: const [],
@@ -421,7 +420,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                               MediaQuery.of(context).size.height * 0.01),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Employee"),
+                            child: Text("Empleado"),
                           ),
                           MultiSelectDropdown.simpleList(
                             list: employeeItems,
@@ -430,12 +429,12 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                               setState(() {
                                 selectedEmployeeNames.clear();
                                 selectedEmployeeIds.clear();
-                                if (selectedItems.contains('Select All')) {
+                                if (selectedItems.contains('Seleccionar Todo')) {
                                   selectedEmployeeNames =
                                       List.from(employeeItems);
                                   selectedEmployeeIds =
                                       List.from(employeeItemsId);
-                                  selectedEmployeeNames.remove('Select All');
+                                  selectedEmployeeNames.remove('Seleccionar Todo');
                                 } else {
                                   for (var item in selectedItems) {
                                     selectedEmployeeNames.add(item);
@@ -512,7 +511,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                                   ),
                                 ),
                               ),
-                              child: const Text('Save',
+                              child: const Text('Guardar',
                                   style: TextStyle(color: Colors.white)),
                             ),
                           ),
@@ -548,7 +547,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
             "leave_type_ids": [leaveId],
           });
 
-          var response = await http.post(uri,
+          await http.post(uri,
               headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer $token",
@@ -621,231 +620,100 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      key: _scaffoldKey,
-      appBar: AppBar(
+    // Crear lista de opciones del menú de permisos
+    List<Map<String, dynamic>> leaveMenuItems = [];
+    
+    if (permissionLeaveOverviewCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.dashboard_outlined,
+        'title': 'Resumen',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveOverview),
+      });
+    }
+    
+    if (permissionMyLeaveRequestCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.person_outline,
+        'title': 'Mis Solicitudes de Permiso',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.myLeaveRequest),
+      });
+    }
+    
+    if (permissionLeaveRequestCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.request_quote,
+        'title': 'Solicitud de Permiso',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveRequest),
+      });
+    }
+    
+    if (permissionLeaveTypeCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.category_outlined,
+        'title': 'Tipos de Permiso',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveTypes),
+      });
+    }
+    
+    if (permissionLeaveAllocationCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.assignment_outlined,
+        'title': 'Solicitud de Asignación',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveAllocationRequest),
+      });
+    }
+    
+    if (permissionLeaveAssignCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.assignment_ind_outlined,
+        'title': 'Todos los Permisos Asignados',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.allAssignedLeave),
+      });
+    }
+
+    return DrawerWrapper(
+      appBarTitle: 'Permisos Asignados',
+      onNotificationTap: null,
+      onLogout: null,
+      onSettingsTap: null,
+      userData: arguments.isNotEmpty ? arguments : null,
+      customMenuItems: leaveMenuItems,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-        ),
-        automaticallyImplyLeading: false,
-        title: const Row(
+        body: Stack(
           children: [
-            Text(
-              'Assigned Leave',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            _isShimmerVisible
+                ? _buildLoadingWidget()
+                : _buildAllAssignedLeaveWidget(),
+            // Botón flotante para asignar
+            Positioned(
+              bottom: 80,
+              right: 16,
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  isAction = false;
+                  _showCreateDialog(context);
+                },
+                backgroundColor: Colors.red,
+                icon: const Icon(Icons.assignment, color: Colors.white),
+                label: const Text(
+                  'ASIGNAR',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: ElevatedButton(
-              onPressed: () {
-                isAction = false;
-                _showCreateDialog(context);
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(75, 50),
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4.0),
-                ),
-                textStyle: const TextStyle(color: Colors.red),
-                side: BorderSide(
-                  color: Colors.red,
-                  width: MediaQuery.of(context).size.width * 0.002,
-                ),
-              ),
-              child: const Text(
-                'ASSIGN',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: _isShimmerVisible
-          ? _buildLoadingWidget()
-          : _buildAllAssignedLeaveWidget(),
-      drawer: Drawer(
-        child: FutureBuilder<void>(
-          future: checkPermissions(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return ListView(
-                padding: const EdgeInsets.all(0),
-                children: [
-                  DrawerHeader(
-                    decoration: const BoxDecoration(),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Image.asset(
-                          'Assets/horilla-logo.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                  shimmerListTile(),
-                  shimmerListTile(),
-                  shimmerListTile(),
-                  shimmerListTile(),
-                  shimmerListTile(),
-                  shimmerListTile(),
-                ],
-              );
-            } else if (snapshot.hasError) {
-              return const Center(child: Text('Error loading permissions.'));
-            } else {
-              return ListView(
-                padding: const EdgeInsets.all(0),
-                children: [
-                  DrawerHeader(
-                    decoration: const BoxDecoration(),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Image.asset(
-                          'Assets/horilla-logo.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                  permissionLeaveOverviewCheck
-                      ? ListTile(
-                    title: const Text('Overview'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/leave_overview');
-                    },
-                  )
-                : const SizedBox.shrink(),
-
-            permissionMyLeaveRequestCheck
-                      ? ListTile(
-                    title: const Text('My Leave Request'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/my_leave_request');
-                    },
-                  )
-                      : const SizedBox.shrink(),
-
-                  permissionLeaveRequestCheck
-                      ? ListTile(
-                    title: const Text('Leave Request'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/leave_request');
-                    },
-                  )
-                      : const SizedBox.shrink(),
-
-                  permissionLeaveTypeCheck
-                      ? ListTile(
-                    title: const Text('Leave Type'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/leave_types');
-                    },
-                  )
-                      : const SizedBox.shrink(),
-
-                  permissionLeaveAllocationCheck
-                      ? ListTile(
-                    title: const Text('Leave Allocation Request'),
-                    onTap: () {
-                      Navigator.pushNamed(
-                          context, '/leave_allocation_request');
-                    },
-                  )
-                      : const SizedBox.shrink(),
-
-                  permissionLeaveAssignCheck
-                      ? ListTile(
-                    title: const Text('All Assigned Leave'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/all_assigned_leave');
-                    },
-                  )
-                      : const SizedBox.shrink(),
-                ],
-              );
-            }
+        bottomNavigationBar: CustomBottomNavBar(
+          currentIndex: currentIndex,
+          arguments: arguments,
+          onTap: (index) {
+            setState(() {
+              currentIndex = index;
+            });
           },
         ),
       ),
-      bottomNavigationBar: (bottomBarPages.length <= maxCount)
-          ? AnimatedNotchBottomBar(
-        /// Provide NotchBottomBarController
-        notchBottomBarController: _controller,
-        color: Colors.red,
-        showLabel: true,
-        notchColor: Colors.red,
-        kBottomRadius: 28.0,
-        kIconSize: 24.0,
-
-        /// restart app if you change removeMargins
-        removeMargins: false,
-        bottomBarWidth: MediaQuery.of(context).size.width * 1,
-        durationInMilliSeconds: 300,
-        bottomBarItems: const [
-          BottomBarItem(
-            inActiveItem: Icon(
-              Icons.home_filled,
-              color: Colors.white,
-            ),
-            activeItem: Icon(
-              Icons.home_filled,
-              color: Colors.white,
-            ),
-          ),
-          BottomBarItem(
-            inActiveItem: Icon(
-              Icons.update_outlined,
-              color: Colors.white,
-            ),
-            activeItem: Icon(
-              Icons.update_outlined,
-              color: Colors.white,
-            ),
-          ),
-          BottomBarItem(
-            inActiveItem: Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
-            activeItem: Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
-          ),
-        ],
-
-        onTap: (index) async {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/home');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/employee_checkin_checkout');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/employees_form',
-                  arguments: arguments);
-              break;
-          }
-        },
-      )
-          : null,
     );
   }
 
@@ -889,7 +757,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                           ),
                           child: const TextField(
                             decoration: InputDecoration(
-                              hintText: 'Search',
+                              hintText: 'Buscar',
                               border: InputBorder.none,
                               prefixIcon: Icon(Icons.search),
                               contentPadding: EdgeInsets.symmetric(
@@ -938,7 +806,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                             });
                           },
                           decoration: InputDecoration(
-                            hintText: 'Search',
+                            hintText: 'Buscar',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.0),
                               borderSide: BorderSide.none,
@@ -981,9 +849,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
 
     Map<String, List<Map<String, dynamic>>> leaveGroups = {};
     for (var record in filteredLeaveType) {
-      final leaveName = record['leave_type_id']['name'] ?? 'Unnamed Leave Type';
-      final leaveIcon =
-          record['leave_type_id']['icon'] ?? Icons.calendar_month_outlined;
+      final leaveName = record['leave_type_id']['name'] ?? 'Tipo de Permiso Sin Nombre';
       leaveGroups.putIfAbsent(leaveName, () => []).add(record);
     }
 
@@ -1019,7 +885,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                           ),
                           child: const TextField(
                             decoration: InputDecoration(
-                              hintText: 'Search',
+                              hintText: 'Buscar',
                               border: InputBorder.none,
                               prefixIcon: Icon(Icons.search),
                               contentPadding: EdgeInsets.symmetric(
