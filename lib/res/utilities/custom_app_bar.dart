@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import '../consts/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../horilla_main/notifications_list.dart';
+import '../../domain/usecases/fetch_notifications_usecase.dart';
+import '../../domain/usecases/get_unread_count_usecase.dart';
+import '../../domain/usecases/delete_notification_usecase.dart';
+import '../../domain/usecases/delete_notifications_usecase.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final int? notificationsCount;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMenuTap;
+  final FetchNotificationsUseCase? fetchNotificationsUseCase;
+  final GetUnreadCountUseCase? getUnreadCountUseCase;
+  final DeleteNotificationUseCase? deleteNotificationUseCase;
+  final BulkDeleteNotificationsUseCase? bulkDeleteNotificationsUseCase;
+  final String? employeeName;
 
   const CustomAppBar({
     Key? key,
@@ -14,16 +24,42 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.notificationsCount,
     this.onNotificationTap,
     this.onMenuTap,
+    this.fetchNotificationsUseCase,
+    this.getUnreadCountUseCase,
+    this.deleteNotificationUseCase,
+    this.bulkDeleteNotificationsUseCase,
+    this.employeeName,
   }) : super(key: key);
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
+  void _showNotificationsModal(BuildContext context) {
+    if (fetchNotificationsUseCase != null &&
+        getUnreadCountUseCase != null &&
+        deleteNotificationUseCase != null &&
+        bulkDeleteNotificationsUseCase != null) {
+      showDialog(
+        context: context,
+        builder: (context) => NotificationsModal(
+          fetchNotificationsUseCase: fetchNotificationsUseCase!,
+          getUnreadCountUseCase: getUnreadCountUseCase!,
+          deleteNotificationUseCase: deleteNotificationUseCase!,
+          bulkDeleteNotificationsUseCase: bulkDeleteNotificationsUseCase!,
+          employeeName: employeeName,
+        ),
+      );
+    } else {
+      // Fallback a navegación si no hay casos de uso
+      Navigator.pushNamed(context, AppRoutes.notificationsList);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      forceMaterialTransparency: false, // Cambiar a false para que el color se aplique
-      backgroundColor: primaryColor, // Color más oscuro que el dashboard
+      forceMaterialTransparency: false,
+      backgroundColor: primaryColor,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(
@@ -55,7 +91,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: Colors.white,
               ),
               onPressed: onNotificationTap ?? () {
-                Navigator.pushNamed(context, AppRoutes.notificationsList);
+                _showNotificationsModal(context);
               },
             ),
             if (notificationsCount != null && notificationsCount! > 0)

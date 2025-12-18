@@ -122,4 +122,46 @@ class NotificationRepositoryImpl implements NotificationRepository {
       throw Exception('Error fetching all notifications: ${e.toString()}');
     }
   }
+  
+  @override
+  Future<void> deleteNotification(int id) async {
+    try {
+      final headers = await _getHeaders();
+      final serverUrl = await _getServerUrl();
+      
+      if (serverUrl == null) {
+        throw Exception('Server URL not found');
+      }
+
+      final uri = Uri.parse('$serverUrl${ApiConstants.getNotificationDeleteUrl(id)}');
+      final response = await http.delete(uri, headers: headers);
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete notification: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting notification: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> bulkDeleteNotifications() async {
+    try {
+      final headers = await _getHeaders();
+      final serverUrl = await _getServerUrl();
+      
+      if (serverUrl == null) {
+        throw Exception('Server URL not found');
+      }
+
+      final uri = Uri.parse('$serverUrl${ApiConstants.notificationsBulkDeleteEndpoint}');
+      final response = await http.delete(uri, headers: headers);
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to bulk delete notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error bulk deleting notifications: ${e.toString()}');
+    }
+  }
 }

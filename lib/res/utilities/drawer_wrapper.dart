@@ -3,6 +3,10 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'custom_drawer_menu.dart';
 import 'custom_app_bar.dart';
 import '../consts/app_colors.dart';
+import '../../domain/usecases/delete_notification_usecase.dart';
+import '../../domain/usecases/delete_notifications_usecase.dart';
+import '../../domain/usecases/get_unread_count_usecase.dart';
+import '../../domain/usecases/fetch_notifications_usecase.dart';
 
 class DrawerWrapper extends StatelessWidget {
   final Widget child;
@@ -11,8 +15,13 @@ class DrawerWrapper extends StatelessWidget {
   final VoidCallback? onNotificationTap;
   final Map<String, dynamic>? userData;
   final Future<void> Function()? onLogout;
-  final VoidCallback? onSettingsTap; // Agregar este parámetro
-  final List<Map<String, dynamic>>? customMenuItems; // Agregar parámetro para opciones personalizadas
+  final VoidCallback? onSettingsTap;
+  final List<Map<String, dynamic>>? customMenuItems;
+  final FetchNotificationsUseCase? fetchNotificationsUseCase;
+  final GetUnreadCountUseCase? getUnreadCountUseCase;
+  final DeleteNotificationUseCase? deleteNotificationUseCase;
+  final BulkDeleteNotificationsUseCase? bulkDeleteNotificationsUseCase;
+  final String? employeeName;
 
   const DrawerWrapper({
     Key? key,
@@ -22,8 +31,13 @@ class DrawerWrapper extends StatelessWidget {
     this.onNotificationTap,
     this.userData,
     this.onLogout,
-    this.onSettingsTap, // Agregar este parámetro
+    this.onSettingsTap,
     this.customMenuItems,
+    this.fetchNotificationsUseCase,
+    this.getUnreadCountUseCase,
+    this.deleteNotificationUseCase,
+    this.bulkDeleteNotificationsUseCase,
+    this.employeeName,
   }) : super(key: key);
 
   @override
@@ -34,8 +48,8 @@ class DrawerWrapper extends StatelessWidget {
         onLogout: () async {
           await onLogout?.call();
         },
-        onSettingsTap: onSettingsTap, // Pasar el callback
-        customMenuItems: customMenuItems, // Pasar aquí
+        onSettingsTap: onSettingsTap,
+        customMenuItems: customMenuItems,
       ),
       mainScreen: Builder(
         builder: (BuildContext scaffoldContext) {
@@ -50,6 +64,11 @@ class DrawerWrapper extends StatelessWidget {
                   zoomDrawer.toggle();
                 }
               },
+              fetchNotificationsUseCase: fetchNotificationsUseCase,
+              getUnreadCountUseCase: getUnreadCountUseCase,
+              deleteNotificationUseCase: deleteNotificationUseCase,
+              bulkDeleteNotificationsUseCase: bulkDeleteNotificationsUseCase,
+              employeeName: employeeName,
             ),
             body: child,
           );
@@ -57,7 +76,7 @@ class DrawerWrapper extends StatelessWidget {
       ),
       borderRadius: 24.0,
       showShadow: true,
-      angle: -12.0, // Cambiado de 0.0 a -12.0
+      angle: -12.0,
       slideWidth: MediaQuery.of(context).size.width * 0.7,
       menuBackgroundColor: Colors.deepOrangeAccent,
     );

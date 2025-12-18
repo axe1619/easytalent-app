@@ -3,6 +3,7 @@ class NotificationModel {
   final String verb;
   final String timestamp;
   final bool deleted;
+  final bool unread;
   final String? description;
   final Map<String, dynamic>? actor;
   final Map<String, dynamic>? target;
@@ -13,6 +14,7 @@ class NotificationModel {
     required this.verb,
     required this.timestamp,
     required this.deleted,
+    required this.unread,
     this.description,
     this.actor,
     this.target,
@@ -25,6 +27,7 @@ class NotificationModel {
       verb: json['verb'] ?? '',
       timestamp: json['timestamp'] ?? '',
       deleted: json['deleted'] ?? false,
+      unread: json['unread'] ?? true,
       description: json['description'],
       actor: json['actor'],
       target: json['target'],
@@ -38,6 +41,7 @@ class NotificationModel {
       'verb': verb,
       'timestamp': timestamp,
       'deleted': deleted,
+      'unread': unread,
       'description': description,
       'actor': actor,
       'target': target,
