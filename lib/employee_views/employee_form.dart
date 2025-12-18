@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../res/utilities/custom_bottom_nav_bar.dart';
+import '../../res/utilities/drawer_wrapper.dart';
 import '../../res/consts/app_colors.dart';
 
 class EmployeeFormPage extends StatefulWidget {
@@ -2206,7 +2207,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            'Department',
+                            'Departamento',
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2216,13 +2217,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: departmentController,
                               decoration: InputDecoration(
-                                labelText: 'Search Department',
+                                labelText: 'Buscar Departamento',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateDepartment
-                                    ? 'Please Choose a Department'
+                                    ? 'Por favor elija un Departamento'
                                     : null,
                               ),
                             ),
@@ -2272,7 +2273,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Job Position",
+                            "Cargo",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2282,13 +2283,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: jobPositionController,
                               decoration: InputDecoration(
-                                labelText: 'Search Job Position',
+                                labelText: 'Buscar Cargo',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateJobPosition
-                                    ? 'Please Choose a Job Position'
+                                    ? 'Por favor elija un Cargo'
                                     : null,
                               ),
                             ),
@@ -2316,7 +2317,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Job Positions Found',
+                                'No se encontraron Cargos',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2338,7 +2339,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            'Shift Information',
+                            'Información de Turno',
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2348,13 +2349,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: shiftInfoController,
                               decoration: InputDecoration(
-                                labelText: 'Search Shift',
+                                labelText: 'Buscar Turno',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 errorText: _validateShift
-                                    ? 'Please Choose a Shift Information'
+                                    ? 'Por favor elija una Información de Turno'
                                     : null,
                               ),
                             ),
@@ -2381,7 +2382,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Shift Information Found',
+                                'No se encontró Información de Turno',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2403,7 +2404,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Work Type",
+                            "Tipo de Trabajo",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2413,13 +2414,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: workTypeController,
                               decoration: InputDecoration(
-                                labelText: 'Search Work Type',
+                                labelText: 'Buscar Tipo de Trabajo',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateWorkType
-                                    ? 'Please Choose a Work Type'
+                                    ? 'Por favor elija un Tipo de Trabajo'
                                     : null,
                               ),
                             ),
@@ -2447,7 +2448,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No WorkTypes Found',
+                                'No se encontraron Tipos de Trabajo',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2469,7 +2470,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            'Job Role',
+                            'Rol de Trabajo',
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2479,13 +2480,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: jobRoleController,
                               decoration: InputDecoration(
-                                labelText: 'Search Job Role',
+                                labelText: 'Buscar Rol de Trabajo',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateJobRule
-                                    ? 'Please Choose a Job Rule'
+                                    ? 'Por favor elija un Rol de Trabajo'
                                     : null,
                               ),
                             ),
@@ -2513,7 +2514,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Job Role Found',
+                                'No se encontró Rol de Trabajo',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2535,7 +2536,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Work Mail",
+                            "Correo de Trabajo",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2544,13 +2545,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: workMailController,
                             decoration: InputDecoration(
-                              labelText: "Work Mail",
+                              labelText: "Correo de Trabajo",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
                               const EdgeInsets.symmetric(horizontal: 10.0),
                               errorText: _validateMail
-                                  ? 'Please Choose a Work Mail'
+                                  ? 'Por favor ingrese un Correo de Trabajo'
                                   : null,
                             ),
                             onChanged: (newValue) {
@@ -2562,7 +2563,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            'Employee Type',
+                            'Tipo de Empleado',
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2572,13 +2573,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: employeeTypeController,
                               decoration: InputDecoration(
-                                labelText: 'Employee Type',
+                                labelText: 'Tipo de Empleado',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateEmployeeType
-                                    ? 'Please Choose a Employee Type'
+                                    ? 'Por favor elija un Tipo de Empleado'
                                     : null,
                               ),
                             ),
@@ -2606,7 +2607,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Employee Type Found',
+                                'No se encontró Tipo de Empleado',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2628,7 +2629,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Salary",
+                            "Salario",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2637,13 +2638,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: salaryController,
                             decoration: InputDecoration(
-                              labelText: "Salary",
+                              labelText: "Salario",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
                               const EdgeInsets.symmetric(horizontal: 10.0),
                               errorText: _validateSalary
-                                  ? 'Salary can not be empty'
+                                  ? 'El salario no puede estar vacío'
                                   : null,
                             ),
                             onChanged: (newValue) {
@@ -2655,7 +2656,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            'Reporting Manager',
+                            'Gerente Supervisor',
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -3514,55 +3515,46 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     bool permissionCheck = args?['permission_check'] ?? false;
     bool checkManager = permissionCheck ||
         (employeeDetails['id'] != null && employeeDetails['id'] == employeeId);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: primaryColor,
-        actions: [
-          if (checkManager)
-            Visibility(
-              visible: employeeDetails['id'] != null,
-              child: IconButton(
-                icon: const Icon(Icons.edit),
-                color: Colors.white,
-                onPressed: () => _showEditOptions(context, employeeDetails,
-                    firstName, employeeWorkInfoRecord, employeeBankRecord),
+    return DrawerWrapper(
+      appBarTitle: 'Detalles del Empleado',
+      userData: arguments.isNotEmpty ? arguments : null,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Stack(
+          children: [
+            Center(
+                child: isLoading
+                    ? _buildLoadingWidget()
+                    : _buildEmployeeDetailsWidget(getToken)),
+            if (!isLoading && checkManager)
+              Positioned(
+                bottom: 80,
+                right: 16,
+                child: FloatingActionButton.extended(
+                  onPressed: () => _showEditOptions(context, employeeDetails,
+                      firstName, employeeWorkInfoRecord, employeeBankRecord),
+                  backgroundColor: primaryColor,
+                  icon: const Icon(Icons.edit, color: Colors.white),
+                  label: const Text(
+                    'Editar',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
-            ),
-          Visibility(
-            visible: employeeDetails['id'] != null &&
-                employeeDetails['id'] == employeeId,
-            child: IconButton(
-              icon: const Icon(Icons.logout),
-              color: Colors.white,
-              onPressed: () async {
-                await clearToken();
-                Navigator.pushNamed(context, '/login');
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: (bottomBarPages.length <= maxCount)
+            ? CustomBottomNavBar(
+                currentIndex: _controller.index >= 0 && _controller.index <= 2 
+                    ? _controller.index 
+                    : 2, // Default a índice 2 (person) si está fuera de rango
+                onTap: (index) {
+                  _controller.jumpTo(index);
+                },
+                arguments: arguments,
+              )
+            : null,
       ),
-      body: Stack(
-        children: [
-          Center(
-              child: isLoading
-                  ? _buildLoadingWidget()
-                  : _buildEmployeeDetailsWidget(getToken)),
-        ],
-      ),
-      bottomNavigationBar: (bottomBarPages.length <= maxCount)
-          ? CustomBottomNavBar(
-              currentIndex: _controller.index >= 0 && _controller.index <= 2 
-                  ? _controller.index 
-                  : 2, // Default a índice 2 (person) si está fuera de rango
-              onTap: (index) {
-                _controller.jumpTo(index);
-              },
-              arguments: arguments,
-            )
-          : null,
     );
   }
 
