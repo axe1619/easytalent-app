@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'checkin_checkout_form.dart';
 import '../controllers/face_detection_controller.dart';
+import '../../res/consts/app_colors.dart';
 
 class FaceScanner extends StatefulWidget {
   final Map userDetails;
@@ -24,7 +25,7 @@ class FaceScanner extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _FaceScannerState createState() => _FaceScannerState();
+  State<FaceScanner> createState() => _FaceScannerState();
 }
 
 class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStateMixin {
@@ -70,7 +71,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Initialization failed: $e')),
+          SnackBar(content: Text('No se pudo inicializar: $e')),
         );
       }
     }
@@ -86,7 +87,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera initialization failed: $e')),
+          SnackBar(content: Text('No se pudo inicializar la cámara: $e')),
         );
       }
     }
@@ -97,12 +98,15 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     setState(() => _isFetchingImage = true);
 
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token");
-    final typedServerUrl = prefs.getString("typed_url");
-    final faceDetectionImage = prefs.getString("face_detection_image");
-    final imagePath = prefs.getString("imagePath");
+    final String? token = prefs.getString("token");
+    final String? typedServerUrl = prefs.getString("typed_url");
+    final String? faceDetectionImage = prefs.getString("face_detection_image");
+    final String? imagePath = prefs.getString("imagePath");
 
-    if (token == null || typedServerUrl == null || faceDetectionImage == '' || imagePath == null) {
+    if (token == null ||
+        typedServerUrl == null ||
+        ((faceDetectionImage == null || faceDetectionImage.isEmpty) &&
+            (imagePath == null || imagePath.isEmpty))) {
       if (mounted) showImageAlertDialog(context);
       return;
     }
@@ -114,12 +118,12 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
           ? typedServerUrl.substring(0, typedServerUrl.length - 1)
           : typedServerUrl;
 
-      if (faceDetectionImage != null) {
+      if (faceDetectionImage != null && faceDetectionImage.isNotEmpty) {
         final cleanedPath = faceDetectionImage.startsWith('/')
             ? faceDetectionImage.substring(1)
             : faceDetectionImage;
         imageUrl = '$cleanedServerUrl/$cleanedPath';
-      } else if (imagePath != null) {
+      } else if (imagePath != null && imagePath.isNotEmpty) {
         final cleanedPath = imagePath.startsWith('/')
             ? imagePath.substring(1)
             : imagePath;
@@ -131,7 +135,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
         return;
       }
 
-      debugPrint("🔎 Fetching biometric image: $imageUrl");
+      debugPrint("Obteniendo imagen biométrica: $imageUrl");
 
       // --- Correct usage of HttpClient + IOClient ---
       final httpClient = HttpClient();
@@ -152,24 +156,21 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
         },
       );
 
-      print('cfcfccf');
-
-      debugPrint("📥 Status: ${response.statusCode}");
-      debugPrint("📥 Headers: ${response.headers}");
+      debugPrint("Estado: ${response.statusCode}");
 
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
         setState(() {
           _employeeImageBase64 = base64Encode(response.bodyBytes);
         });
-        debugPrint("✅ Image downloaded: ${response.bodyBytes.length} bytes");
+        debugPrint("Imagen descargada: ${response.bodyBytes.length} bytes");
       } else {
-        debugPrint("❌ Invalid response or empty image data");
+        debugPrint("Respuesta inválida o imagen vacía");
         if (mounted) showImageAlertDialog(context);
       }
 
       ioClient.close();
     } catch (e) {
-      debugPrint("⚠️ Error fetching biometric image: $e");
+      debugPrint("Error al obtener la imagen biométrica: $e");
       if (mounted) showImageAlertDialog(context);
     } finally {
       if (mounted) setState(() => _isFetchingImage = false);
@@ -180,8 +181,8 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Employee Image Not Set"),
-        content: const Text("Setup a New FaceImage?"),
+        title: const Text("Imagen del empleado no configurada"),
+        content: const Text("¿Deseas configurar una nueva imagen facial?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -198,7 +199,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
                 );
               }
             },
-            child: const Text("Yes"),
+            child: const Text("Sí"),
           ),
         ],
       ),
@@ -216,13 +217,13 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
         final image = await _controller.captureImage();
 
         if (image == null || _employeeImageBase64 == null) {
-          debugPrint('Image capture failed or no employee image');
+          debugPrint('No se pudo capturar la imagen o no hay imagen del empleado');
           continue;
         }
 
-        debugPrint('Starting face comparison...');
+        debugPrint('Iniciando comparación facial...');
         final isMatched = await _controller.compareFaces(File(image.path), _employeeImageBase64!);
-        debugPrint('Face comparison result: $isMatched');
+        debugPrint('Resultado de comparación: $isMatched');
 
         if (isMatched) {
           await _handleComparisonResult(true);
@@ -233,10 +234,10 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
           setState(() => _isDetectionPaused = false);
         }
       } catch (e) {
-        debugPrint('Face detection error: $e');
+        debugPrint('Error en detección facial: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Face detection error. Please try again.')),
+            const SnackBar(content: Text('Error en la detección facial. Intenta de nuevo.')),
           );
         }
       } finally {
@@ -250,8 +251,8 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text("Incorrect Face"),
-        content: const Text("The detected face does not match. Please try again."),
+        title: const Text("Rostro incorrecto"),
+        content: const Text("El rostro detectado no coincide. Intenta de nuevo."),
         actions: [
           TextButton(
             onPressed: () {
@@ -263,7 +264,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
                 );
               }
             },
-            child: const Text("OK"),
+            child: const Text("Aceptar"),
           ),
         ],
       ),
@@ -280,7 +281,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
 
     if (geoFencing && widget.userLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location unavailable. Cannot proceed.')),
+        const SnackBar(content: Text('Ubicación no disponible. No se puede continuar.')),
       );
       return;
     }
@@ -317,7 +318,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Network error: $e')),
+          SnackBar(content: Text('Error de red: $e')),
         );
       }
     }
@@ -326,9 +327,9 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
   String getErrorMessage(String responseBody) {
     try {
       final Map decoded = json.decode(responseBody);
-      return decoded['message'] ?? 'Unknown error occurred';
+      return decoded['message'] ?? 'Ocurrió un error desconocido';
     } catch (e) {
-      return 'Error parsing server response';
+      return 'Error al procesar la respuesta del servidor';
     }
   }
 
@@ -336,7 +337,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Check-in Failed'),
+        title: const Text('Error al marcar asistencia'),
         content: Text(errorMessage),
         actions: [
           TextButton(
@@ -344,7 +345,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
               Navigator.pop(ctx);
               if (mounted) Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: const Text('Aceptar'),
           ),
         ],
       ),
@@ -408,7 +409,7 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Detecting Faces...',
+                    'Detectando rostros...',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -427,8 +428,8 @@ class _FaceScannerState extends State<FaceScanner> with SingleTickerProviderStat
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Face Detection'),
-        backgroundColor: Colors.red,
+        title: const Text('Detección facial'),
+        backgroundColor: primaryColor,
         elevation: 0,
       ),
       body: Center(

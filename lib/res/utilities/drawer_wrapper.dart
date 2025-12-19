@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'custom_drawer_menu.dart';
 import 'custom_app_bar.dart';
-import '../consts/app_colors.dart';
+import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/usecases/delete_notification_usecase.dart';
 import '../../domain/usecases/delete_notifications_usecase.dart';
 import '../../domain/usecases/get_unread_count_usecase.dart';
@@ -42,6 +42,29 @@ class DrawerWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasAllNotificationDeps = fetchNotificationsUseCase != null &&
+        getUnreadCountUseCase != null &&
+        deleteNotificationUseCase != null &&
+        bulkDeleteNotificationsUseCase != null;
+
+    final notificationRepository = NotificationRepositoryImpl();
+    final FetchNotificationsUseCase effectiveFetchNotificationsUseCase =
+        hasAllNotificationDeps
+            ? fetchNotificationsUseCase!
+            : FetchNotificationsUseCase(notificationRepository);
+    final GetUnreadCountUseCase effectiveGetUnreadCountUseCase =
+        hasAllNotificationDeps
+            ? getUnreadCountUseCase!
+            : GetUnreadCountUseCase(notificationRepository);
+    final DeleteNotificationUseCase effectiveDeleteNotificationUseCase =
+        hasAllNotificationDeps
+            ? deleteNotificationUseCase!
+            : DeleteNotificationUseCase(notificationRepository);
+    final BulkDeleteNotificationsUseCase effectiveBulkDeleteNotificationsUseCase =
+        hasAllNotificationDeps
+            ? bulkDeleteNotificationsUseCase!
+            : BulkDeleteNotificationsUseCase(notificationRepository);
+
     return ZoomDrawer(
       menuScreen: CustomDrawerMenu(
         userData: userData,
@@ -64,10 +87,11 @@ class DrawerWrapper extends StatelessWidget {
                   zoomDrawer.toggle();
                 }
               },
-              fetchNotificationsUseCase: fetchNotificationsUseCase,
-              getUnreadCountUseCase: getUnreadCountUseCase,
-              deleteNotificationUseCase: deleteNotificationUseCase,
-              bulkDeleteNotificationsUseCase: bulkDeleteNotificationsUseCase,
+              fetchNotificationsUseCase: effectiveFetchNotificationsUseCase,
+              getUnreadCountUseCase: effectiveGetUnreadCountUseCase,
+              deleteNotificationUseCase: effectiveDeleteNotificationUseCase,
+              bulkDeleteNotificationsUseCase:
+                  effectiveBulkDeleteNotificationsUseCase,
               employeeName: employeeName,
             ),
             body: child,

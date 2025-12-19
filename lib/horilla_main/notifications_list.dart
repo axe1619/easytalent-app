@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -8,9 +7,6 @@ import '../domain/usecases/fetch_notifications_usecase.dart';
 import '../domain/usecases/get_unread_count_usecase.dart';
 import '../domain/usecases/delete_notification_usecase.dart';
 import '../domain/usecases/delete_notifications_usecase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import '../core/constants/api_constants.dart';
 
 class NotificationsModal extends StatefulWidget {
   final FetchNotificationsUseCase fetchNotificationsUseCase;
@@ -34,7 +30,7 @@ class NotificationsModal extends StatefulWidget {
 
 class _NotificationsModalState extends State<NotificationsModal> {
   List<NotificationModel> notifications = [];
-  bool isLoading = true;
+  bool isLoading = false;
   final ScrollController _scrollController = ScrollController();
   int currentPage = 1;
   bool hasMore = true;
@@ -104,8 +100,9 @@ class _NotificationsModalState extends State<NotificationsModal> {
         notifications.clear();
         currentPage = 1;
         hasMore = true;
-        fetchNotifications();
+        isLoading = false;
       });
+      await fetchNotifications();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -363,7 +360,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
           ),
           Divider(
             height: 1.0,
-            color: Colors.grey[400]?.withOpacity(0.2),
+            color: Colors.grey[400]?.withAlpha(51),
           ),
         ],
       ),

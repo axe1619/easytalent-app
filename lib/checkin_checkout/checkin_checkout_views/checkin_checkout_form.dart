@@ -13,6 +13,7 @@ import 'face_detection.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import '../../res/utilities/custom_bottom_nav_bar.dart';
+import '../../res/utilities/drawer_wrapper.dart';
 import '../../res/consts/app_colors.dart';
 
 
@@ -61,6 +62,8 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
   bool _locationSnackBarShown = false;
   bool _locationUnavailableSnackBarShown = false;
   late String getToken = '';
+  double _dragDx = 0;
+  double _dragDy = 0;
 
 
 
@@ -130,7 +133,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
     } catch (e) {
       print('Error initializing data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to initialize data: $e')),
+        SnackBar(content: Text('No se pudo inicializar la informacion: $e')),
       );
     }
   }
@@ -151,9 +154,9 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
             _locationSnackBarShown = true;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Location services are disabled. Please enable them.'),
+                content: const Text('Los servicios de ubicacion estan desactivados. Por favor activalos.'),
                 action: SnackBarAction(
-                  label: 'Enable',
+                  label: 'Activar',
                   onPressed: () {
                     Geolocator.openLocationSettings();
                   },
@@ -169,7 +172,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
           permission = await Geolocator.requestPermission();
           if (permission == LocationPermission.denied) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Location permissions are denied.')),
+              const SnackBar(content: Text('Los permisos de ubicacion estan denegados.')),
             );
             return;
           }
@@ -178,9 +181,9 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
         if (permission == LocationPermission.deniedForever) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Location permissions are permanently denied.'),
+              content: const Text('Los permisos de ubicacion estan denegados permanentemente.'),
               action: SnackBarAction(
-                label: 'Settings',
+                label: 'Ajustes',
                 onPressed: () {
                   AppSettings.openAppSettings();
                 },
@@ -200,7 +203,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
       } catch (e) {
         print('Error fetching location: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get location: $e')),
+          SnackBar(content: Text('No se pudo obtener la ubicacion: $e')),
         );
       }
     }
@@ -471,9 +474,9 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
   String getErrorMessage(String responseBody) {
     try {
       final Map<String, dynamic> decoded = json.decode(responseBody);
-      return decoded['message'] ?? 'Unknown error occurred';
+      return decoded['message'] ?? 'Ocurrio un error desconocido';
     } catch (e) {
-      return 'Error parsing server response';
+      return 'Error al procesar la respuesta del servidor';
     }
   }
 
@@ -528,27 +531,20 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
     );
   }
 
+  void _resetDrag() {
+    _dragDx = 0;
+    _dragDy = 0;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await clearToken();
-              stopwatchManager.resetStopwatch();
-              Navigator.pushNamed(context, '/login');
-            },
-          ),
-        ],
-      ),
-      body: isLoading ? _buildLoadingWidget() : _buildCheckInCheckoutWidget(getToken),
-      bottomNavigationBar: CustomBottomNavBar(
+    return DrawerWrapper(
+      appBarTitle: 'Asistencia',
+      userData: arguments.isNotEmpty ? arguments : null,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: isLoading ? _buildLoadingWidget() : _buildCheckInCheckoutWidget(getToken),
+        bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _controller.index >= 0 && _controller.index <= 2 
             ? _controller.index 
             : 1, // Default a índice 1 (checkin/checkout) si está fuera de rango
@@ -556,6 +552,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
           _controller.jumpTo(index);
         },
         arguments: arguments,
+      ),
       ),
     );
   }
@@ -772,7 +769,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
       children: [
         if (clockCheckBool || clockCheckedIn)
           Container(
-            color: Colors.red,
+            color: primaryColor,
             height: MediaQuery.of(context).size.height * 0.25,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -992,14 +989,19 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
         ),
         SizedBox(height: MediaQuery.of(context).size.height * 0.02),
         GestureDetector(
-          onPanUpdate: (details) async {
+          onHorizontalDragStart: (_) => _resetDrag(),
+          onHorizontalDragUpdate: (details) async {
+            _dragDx += details.delta.dx;
+            _dragDy += details.delta.dy;
             if (!_isProcessingDrag) {
               final prefs = await SharedPreferences.getInstance();
               var face_detection = prefs.getBool("face_detection");
               var geo_fencing = prefs.getBool("geo_fencing");
               if (face_detection == true) {
-                if (details.delta.dx.abs() > details.delta.dy.abs() && details.delta.dx.abs() > 10) {
+                if (_dragDx.abs() > 60 && _dragDx.abs() > _dragDy.abs()) {
                   _isProcessingDrag = true;
+                  final swipeDx = _dragDx;
+                  _resetDrag();
                   if (userLocation == null) {
                     if (!_locationUnavailableSnackBarShown && geo_fencing == true) {
                       _locationUnavailableSnackBarShown = true;
@@ -1008,8 +1010,9 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                       );
                     }
                     _isProcessingDrag = false;
+                    return;
                   }
-                  if (details.delta.dx < 0 && clockCheckedIn) {
+                  if (swipeDx < 0 && clockCheckedIn) {
                     // Marcar Salida
                     final result = await Navigator.push(
                       context,
@@ -1037,7 +1040,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                             clockCheckedIn, 2, checkOutFormattedTime.toString());
                       });
                     }
-                  } else if (details.delta.dx > 0 && !clockCheckedIn) {
+                  } else if (swipeDx > 0 && !clockCheckedIn) {
                     // Marcar Entrada
                     final result = await Navigator.push(
                       context,
@@ -1084,8 +1087,10 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                 }
               }
               else if (geo_fencing == true) {
-                if (details.delta.dx.abs() > details.delta.dy.abs() && details.delta.dx.abs() > 10) {
+                if (_dragDx.abs() > 60 && _dragDx.abs() > _dragDy.abs()) {
                   _isProcessingDrag = true;
+                  final swipeDx = _dragDx;
+                  _resetDrag();
                   if (userLocation == null) {
                     if (!_locationUnavailableSnackBarShown) {
                       _locationUnavailableSnackBarShown = true;
@@ -1097,7 +1102,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                     return;
                   }
 
-                  if (details.delta.dx < 0 && clockCheckedIn) {
+                  if (swipeDx < 0 && clockCheckedIn) {
                     final prefs = await SharedPreferences.getInstance();
                     var token = prefs.getString("token");
                     var typedServerUrl = prefs.getString("typed_url");
@@ -1131,7 +1136,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                       String errorMessage = getErrorMessage(response_geofence.body);
                       showCheckInFailedDialog(context, errorMessage);
                     }
-                  } else if (details.delta.dx > 0 && !clockCheckedIn) {
+                  } else if (swipeDx > 0 && !clockCheckedIn) {
                     final prefs = await SharedPreferences.getInstance();
                     var token = prefs.getString("token");
                     var typedServerUrl = prefs.getString("typed_url");
@@ -1187,10 +1192,11 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                 }
               }
               else {
-                if (details.delta.dx.abs() > details.delta.dy.abs() &&
-                    details.delta.dx.abs() > 10) {
+                if (_dragDx.abs() > 60 && _dragDx.abs() > _dragDy.abs()) {
                   _isProcessingDrag = true;
-                  if (details.delta.dx < 0) {
+                  final swipeDx = _dragDx;
+                  _resetDrag();
+                  if (swipeDx < 0 && clockCheckedIn) {
                     setState(() {
                       postCheckout();
                       isCheckIn = false;
@@ -1206,7 +1212,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                       _saveClockState(
                           clockCheckedIn, 2, checkOutFormattedTime.toString());
                     });
-                  } else if (details.delta.dx > 0) {
+                  } else if (swipeDx > 0 && !clockCheckedIn) {
                     setState(() {
                       postCheckIn();
                       isCheckIn = true;
@@ -1242,7 +1248,8 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
               }
             }
           },
-          onPanEnd: (details) {
+          onHorizontalDragEnd: (_) {
+            _resetDrag();
             _isProcessingDrag = false;
           },
           child: Padding(
@@ -1252,7 +1259,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
               height: MediaQuery.of(context).size.height * 0.07,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.0),
-                color: clockCheckedIn ? Colors.red : Colors.green,
+                color: clockCheckedIn ? primaryColor : secondaryColor,
               ),
               alignment: Alignment.center,
               child: Row(
@@ -1266,7 +1273,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                         width: MediaQuery.of(context).size.width * 0.12,
                         height: MediaQuery.of(context).size.height * 0.06,
                         decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white),
-                        child: const Icon(Icons.arrow_forward, color: Colors.green, size: 30.0),
+                        child: Icon(Icons.arrow_forward, color: secondaryColor, size: 30.0),
                       ),
                     ),
 
@@ -1287,7 +1294,7 @@ class _CheckInCheckOutFormPageState extends State<CheckInCheckOutFormPage> {
                         width: MediaQuery.of(context).size.width * 0.12,
                         height: MediaQuery.of(context).size.height * 0.06,
                         decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.white),
-                        child: const Icon(Icons.arrow_back, color: Colors.red, size: 30.0),
+                        child: Icon(Icons.arrow_back, color: primaryColor, size: 30.0),
                       ),
                     )
                 ],

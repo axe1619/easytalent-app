@@ -870,23 +870,23 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         setState(() {});
       }
       if (responseData.containsKey('employee_first_name')) {
-        _errorMessage = "employee first name field may not be blank";
+        _errorMessage = "El campo 'nombre' no puede estar vacío";
         setState(() {});
       }
       if (responseData.containsKey('email')) {
-        _errorMessage = "email field may not be blank";
+        _errorMessage = "El campo 'correo' no puede estar vacío";
         setState(() {});
       }
       if (responseData.containsKey('phone')) {
-        _errorMessage = "phone field may not be blank";
+        _errorMessage = "El campo 'teléfono' no puede estar vacío";
         setState(() {});
       }
       if (responseData.containsKey('experience')) {
-        _errorMessage = "experience field may not be blank";
+        _errorMessage = "El campo 'experiencia' no puede estar vacío";
         setState(() {});
       }
       if (responseData.containsKey('children')) {
-        _errorMessage = "children field may not be blank";
+        _errorMessage = "El campo 'hijos' no puede estar vacío";
         setState(() {});
       }
       setState(() {});
@@ -1285,9 +1285,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
       return pickedFile;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No image selected'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No se seleccionó ninguna imagen'),
+          backgroundColor: primaryColor,
         ),
       );
       return null;
@@ -1322,9 +1322,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-            ),
+            colorScheme: ColorScheme.light(primary: primaryColor),
           ),
           child: child!,
         );
@@ -1418,9 +1416,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               padding: const EdgeInsets.only(bottom: 10),
                               child: Text(
                                 _errorMessage ?? '',
-                                style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           SizedBox(
@@ -2102,7 +2101,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         },
                         style: ButtonStyle(
                           backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
+                          MaterialStateProperty.all<Color>(primaryColor),
                           shape:
                           MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -2198,9 +2197,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               padding: const EdgeInsets.only(bottom: 10),
                               child: Text(
                                 _errorMessage ?? '',
-                                style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           SizedBox(
@@ -2989,7 +2989,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         },
                         style: ButtonStyle(
                           backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
+                          MaterialStateProperty.all<Color>(primaryColor),
                           shape:
                           MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -3055,9 +3055,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               padding: const EdgeInsets.only(bottom: 10),
                               child: Text(
                                 _errorMessage ?? '',
-                                style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           SizedBox(
@@ -3417,7 +3418,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         },
                         style: ButtonStyle(
                           backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
+                          MaterialStateProperty.all<Color>(primaryColor),
                           shape:
                           MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -3465,10 +3466,68 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
           ));
     }
 
-    showMenu(
+    final _ = menuItems;
+
+    final bool puedeEditarInfoLaboral =
+        employeeDetails['id'] != null && employeeDetails['id'] != employeeId;
+
+    showModalBottomSheet<String>(
       context: context,
-      position: const RelativeRect.fromLTRB(100, 80, 0, 0),
-      items: menuItems,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Opciones de edición',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: blackColor,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_outlined, color: primaryColor),
+                  title: const Text('Información personal'),
+                  onTap: () => Navigator.pop(sheetContext, 'personal'),
+                ),
+                if (puedeEditarInfoLaboral)
+                  ListTile(
+                    leading: Icon(Icons.work_history_outlined, color: primaryColor),
+                    title: const Text('Información laboral'),
+                    onTap: () => Navigator.pop(sheetContext, 'work'),
+                  ),
+                ListTile(
+                  leading: Icon(Icons.account_balance_outlined, color: primaryColor),
+                  title: const Text('Información bancaria'),
+                  onTap: () => Navigator.pop(sheetContext, 'bank'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     ).then((value) {
       if (value == 'personal') {
         isAction = false;
@@ -3483,7 +3542,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         _errorMessage = null;
         bankNameController.text =
             employeeBankRecord['bank_name']?.toString() ?? '';
-        bankNameController.text =
+        accountNumberController.text =
             employeeBankRecord['account_number']?.toString() ?? '';
         branchController.text = employeeBankRecord['branch']?.toString() ?? '';
         bankCodeOneController.text =
@@ -3530,15 +3589,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
               Positioned(
                 bottom: 80,
                 right: 16,
-                child: FloatingActionButton.extended(
+                child: FloatingActionButton(
+                  mini: true,
                   onPressed: () => _showEditOptions(context, employeeDetails,
                       firstName, employeeWorkInfoRecord, employeeBankRecord),
                   backgroundColor: primaryColor,
-                  icon: const Icon(Icons.edit, color: Colors.white),
-                  label: const Text(
-                    'Editar',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+                  child: const Icon(Icons.edit, color: Colors.white),
                 ),
               ),
           ],
@@ -3581,12 +3637,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   children: [
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       "Información actualizada exitosamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: primaryColor),
                     ),
                   ],
                 ),
@@ -3624,12 +3680,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   children: [
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       "Información actualizada exitosamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: primaryColor),
                     ),
                   ],
                 ),
@@ -3667,12 +3723,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   children: [
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       "Información actualizada exitosamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: primaryColor),
                     ),
                   ],
                 ),
@@ -3788,7 +3844,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                       CrossAxisAlignment
                                                           .start,
                                                       children: [
-                                                        const Row(
+                                                        Row(
                                                           mainAxisSize:
                                                           MainAxisSize.min,
                                                           children: [
@@ -3848,12 +3904,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                 crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                                 children: [
-                                                  const Row(
+                                                  Row(
                                                     mainAxisSize:
                                                     MainAxisSize.min,
                                                     children: [
                                                       Icon(Icons.phone,
-                                                          color: Colors.red,
+                                                          color: primaryColor,
                                                           size: 15),
                                                       Text(
                                                         '   Teléfono Laboral',
@@ -3908,7 +3964,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                     CrossAxisAlignment
                                                         .start,
                                                     children: [
-                                                      const Row(
+                                                      Row(
                                                         mainAxisSize:
                                                         MainAxisSize.min,
                                                         children: [
@@ -3919,7 +3975,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                             child: Icon(
                                                                 Icons.email,
                                                                 color:
-                                                                Colors.red,
+                                                                primaryColor,
                                                                 size: 15),
                                                           ),
                                                           Text(
@@ -3967,12 +4023,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                               crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                               children: [
-                                                const Row(
+                                                Row(
                                                   mainAxisSize:
                                                   MainAxisSize.min,
                                                   children: [
                                                     Icon(Icons.phone,
-                                                        color: Colors.red,
+                                                        color: primaryColor,
                                                         size: 15),
                                                     Text(
                                                       '   Teléfono',
@@ -4027,8 +4083,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 TabBar(
                                   isScrollable: true,
                                   controller: _tabController,
-                                  indicatorColor: Colors.red,
-                                  labelColor: Colors.red,
+                                  indicatorColor: primaryColor,
+                                  labelColor: primaryColor,
                                   unselectedLabelColor: Colors.grey,
                                   labelStyle: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -4152,9 +4208,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     onTap: () async {
                                       await _pickImage(employeeDetails['id']);
                                     },
-                                    child: const CircleAvatar(
+                                    child: CircleAvatar(
                                       radius: 12.0,
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: primaryColor,
                                       child: Icon(
                                         Icons.camera_alt,
                                         size: 12.0,
@@ -4241,7 +4297,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                   crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                                   children: [
-                                                    const Row(
+                                                    Row(
                                                       mainAxisSize:
                                                       MainAxisSize.min,
                                                       children: [
@@ -4251,7 +4307,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                               right: 8.0),
                                                           child: Icon(
                                                               Icons.email,
-                                                              color: Colors.red,
+                                                              color: primaryColor,
                                                               size: 15),
                                                         ),
                                                         Text(
@@ -4295,11 +4351,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                             crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                             children: [
-                                              const Row(
+                                              Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(Icons.phone,
-                                                      color: Colors.red,
+                                                      color: primaryColor,
                                                       size: 15),
                                                   Text(
                                                     '   Teléfono Laboral',
@@ -4351,7 +4407,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                 crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                                 children: [
-                                                  const Row(
+                                                  Row(
                                                     mainAxisSize:
                                                     MainAxisSize.min,
                                                     children: [
@@ -4360,7 +4416,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                         EdgeInsets.only(
                                                             right: 8.0),
                                                         child: Icon(Icons.email,
-                                                            color: Colors.red,
+                                                            color: primaryColor,
                                                             size: 15),
                                                       ),
                                                       Text(
@@ -4403,11 +4459,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                           crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                           children: [
-                                            const Row(
+                                            Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Icon(Icons.phone,
-                                                    color: Colors.red,
+                                                    color: primaryColor,
                                                     size: 15),
                                                 Text(
                                                   '   Teléfono',
@@ -4457,8 +4513,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 TabBar(
                                   isScrollable: true,
                                   controller: _tabController,
-                                  labelColor: Colors.red,
-                                  indicatorColor: Colors.red,
+                                  labelColor: primaryColor,
+                                  indicatorColor: primaryColor,
                                   unselectedLabelColor: Colors.grey,
                                   labelStyle: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -4555,69 +4611,83 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     TextEditingController bankCountryController = TextEditingController();
     TextEditingController bankStateController = TextEditingController();
     var dob = employeeDetails['dob'];
-    dateOfBirthController.text = (dob != null && dob.isNotEmpty) ? dob : 'None';
+    dateOfBirthController.text =
+        (dob != null && dob.isNotEmpty) ? dob : 'No disponible';
     var gender = employeeDetails['gender'];
     genderController.text =
-    (gender != null && gender.isNotEmpty) ? gender : 'None';
+    (gender != null && gender.isNotEmpty) ? gender : 'No disponible';
     var address = employeeDetails['address'];
     addressController.text =
-    (address != null && address.isNotEmpty) ? address : 'None';
+    (address != null && address.isNotEmpty) ? address : 'No disponible';
     var country = employeeDetails['country'];
     countryController.text =
-    (country != null && country.isNotEmpty) ? country : 'None';
+    (country != null && country.isNotEmpty) ? country : 'No disponible';
     var state = employeeDetails['state'];
-    stateController.text = (state != null && state.isNotEmpty) ? state : 'None';
+    stateController.text =
+        (state != null && state.isNotEmpty) ? state : 'No disponible';
     var city = employeeDetails['city'];
-    cityController.text = (city != null && city.isNotEmpty) ? city : 'None';
+    cityController.text =
+        (city != null && city.isNotEmpty) ? city : 'No disponible';
     var qualification = employeeDetails['qualification'];
     qualificationController.text =
     (qualification != null && qualification.isNotEmpty)
         ? qualification
-        : 'None';
+        : 'No disponible';
     experienceController.text =
-        employeeDetails['experience']?.toString() ?? 'None';
-    maritalStatusController.text = employeeDetails['marital_status'] ?? 'None';
-    childrenController.text = employeeDetails['children']?.toString() ?? 'None';
+        employeeDetails['experience']?.toString() ?? 'No disponible';
+    maritalStatusController.text =
+        employeeDetails['marital_status'] ?? 'No disponible';
+    childrenController.text =
+        employeeDetails['children']?.toString() ?? 'No disponible';
     var emergencyContact = employeeDetails['emergency_contact'];
     emergencyContactController.text =
     (emergencyContact != null && emergencyContact.isNotEmpty)
         ? emergencyContact
-        : 'None';
+        : 'No disponible';
     var emergencyContactName = employeeDetails['emergency_contact_name'];
     emergencyContactNameController.text =
     (emergencyContactName != null && emergencyContactName.isNotEmpty)
         ? emergencyContactName
-        : 'None';
+        : 'No disponible';
     departmentController.text =
-        employeeWorkInfoRecord['department_name'] ?? 'None';
+        employeeWorkInfoRecord['department_name'] ?? 'No disponible';
     jobPositionController.text =
-        employeeWorkInfoRecord['job_position_name'] ?? 'None';
-    shiftController.text = employeeWorkInfoRecord['shift_name'] ?? 'None';
+        employeeWorkInfoRecord['job_position_name'] ?? 'No disponible';
+    shiftController.text =
+        employeeWorkInfoRecord['shift_name'] ?? 'No disponible';
     workTypeController.text =
-        employeeWorkInfoRecord['work_type_name'] ?? 'None';
+        employeeWorkInfoRecord['work_type_name'] ?? 'No disponible';
     employeeTypeController.text =
-        employeeWorkInfoRecord['employee_type_name'] ?? 'None';
+        employeeWorkInfoRecord['employee_type_name'] ?? 'No disponible';
     salaryController.text =
-        employeeWorkInfoRecord['basic_salary']?.toString() ?? 'None';
+        employeeWorkInfoRecord['basic_salary']?.toString() ?? 'No disponible';
     reportingManagerController.text =
-        employeeWorkInfoRecord['reporting_manager_first_name'] ?? 'None';
-    companyController.text = employeeWorkInfoRecord['company_name'] ?? 'None';
-    locationController.text = employeeWorkInfoRecord['location'] ?? 'None';
+        employeeWorkInfoRecord['reporting_manager_first_name'] ??
+            'No disponible';
+    companyController.text =
+        employeeWorkInfoRecord['company_name'] ?? 'No disponible';
+    locationController.text =
+        employeeWorkInfoRecord['location'] ?? 'No disponible';
     joiningDateController.text =
-        employeeWorkInfoRecord['date_joining'] ?? 'None';
+        employeeWorkInfoRecord['date_joining'] ?? 'No disponible';
     endDateController.text =
-        employeeWorkInfoRecord['contract_end_date'] ?? 'None';
+        employeeWorkInfoRecord['contract_end_date'] ?? 'No disponible';
     tagsController.text = (employeeWorkInfoRecord['tags'] is List &&
         employeeWorkInfoRecord['tags'].isNotEmpty)
         ? employeeWorkInfoRecord['tags'].join(', ')
-        : (employeeWorkInfoRecord['tags']?.toString() ?? 'None');
-    bankNameController.text = employeeBankRecord['bank_name'] ?? 'None';
+        : (employeeWorkInfoRecord['tags']?.toString() ?? 'No disponible');
+    bankNameController.text =
+        employeeBankRecord['bank_name'] ?? 'No disponible';
     accountNumberController.text =
-        employeeBankRecord['account_number']?.toString() ?? 'None';
-    branchController.text = employeeBankRecord['branch'] ?? 'None';
-    bankAddressController.text = employeeBankRecord['address'] ?? 'None';
-    bankCountryController.text = employeeBankRecord['country'] ?? 'None';
-    bankStateController.text = employeeBankRecord['state'] ?? 'None';
+        employeeBankRecord['account_number']?.toString() ?? 'No disponible';
+    branchController.text =
+        employeeBankRecord['branch'] ?? 'No disponible';
+    bankAddressController.text =
+        employeeBankRecord['address'] ?? 'No disponible';
+    bankCountryController.text =
+        employeeBankRecord['country'] ?? 'No disponible';
+    bankStateController.text =
+        employeeBankRecord['state'] ?? 'No disponible';
 
     return SingleChildScrollView(
       child: Column(
@@ -4653,14 +4723,14 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: ExpansionTile(
-                      backgroundColor: Colors.red.shade100,
-                      collapsedBackgroundColor: Colors.red.shade50,
+                      backgroundColor: primaryColor.withAlpha(38),
+                      collapsedBackgroundColor: primaryColor.withAlpha(20),
                       title: titleIcon != null
                           ? Row(
                         children: [
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.0493,
-                            child: Icon(titleIcon, color: Colors.red),
+                            child: Icon(titleIcon, color: primaryColor),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -5317,7 +5387,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: primaryColor.withAlpha(20),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Row(
@@ -5348,9 +5418,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           Container(
                             width: MediaQuery.of(context).size.width * 0.07,
                             height: MediaQuery.of(context).size.height * 0.03,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.redAccent,
+                              color: secondaryColor,
                             ),
                             child: Center(
                               child: Text(
@@ -5391,7 +5461,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: primaryColor.withAlpha(20),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Row(
@@ -5422,9 +5492,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           Container(
                             width: MediaQuery.of(context).size.width * 0.07,
                             height: MediaQuery.of(context).size.height * 0.03,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.redAccent,
+                              color: secondaryColor,
                             ),
                             child: Center(
                               child: Text(
@@ -5465,7 +5535,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: primaryColor.withAlpha(20),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Row(
@@ -5497,9 +5567,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           Container(
                             width: MediaQuery.of(context).size.width * 0.07,
                             height: MediaQuery.of(context).size.height * 0.03,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.redAccent,
+                              color: secondaryColor,
                             ),
                             child: Center(
                               child: Text(
@@ -5540,7 +5610,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: primaryColor.withAlpha(20),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Row(
@@ -5572,9 +5642,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           Container(
                             width: MediaQuery.of(context).size.width * 0.07,
                             height: MediaQuery.of(context).size.height * 0.03,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.redAccent,
+                              color: secondaryColor,
                             ),
                             child: Center(
                               child: Text(
@@ -5641,7 +5711,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     if (await canLaunch('tel:$phoneNumber')) {
       await launch('tel:$phoneNumber');
     } else {
-      throw 'Could not launch $phoneNumber';
+      throw 'No se pudo abrir el marcador para $phoneNumber';
     }
   }
 

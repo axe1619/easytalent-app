@@ -3,24 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:html/parser.dart' as html_parser;
+
+import '../core/routes/app_routes.dart';
+import '../res/consts/app_colors.dart';
+import '../res/utilities/custom_bottom_nav_bar.dart';
+import '../res/utilities/drawer_wrapper.dart';
+
+String sanearHtml(String? html) {
+  if (html == null || html.isEmpty) return '';
+  return html.replaceAll(RegExp(r'<img[^>]*>', caseSensitive: false), '');
+}
 
 class AttendanceOverview extends StatefulWidget {
   const AttendanceOverview({super.key});
 
   @override
-  _AttendanceOverviewState createState() => _AttendanceOverviewState();
+  State<AttendanceOverview> createState() => _AttendanceOverviewState();
 }
 
 class _AttendanceOverviewState extends State<AttendanceOverview>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  final _controller = NotchBottomBarController(index: -1);
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String baseUrl = '';
-  late Map<String, dynamic> arguments;
+  Map<String, dynamic> arguments = {};
   late TabController _tabController;
   late String todayAttendance = '0';
   late String offlineEmpCount = '0';
@@ -41,6 +48,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
   int maxCount = 5;
   int page = 1;
   int currentPage = 1;
+  int currentIndex = 0;
   bool permissionCheck = false;
   bool isLoading = true;
   bool _isShimmerVisible = true;
@@ -98,6 +106,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
     _scrollController.dispose();
 
     bodyController.dispose();
+    _tabController.dispose();
 
     super.dispose();
   }
@@ -137,7 +146,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
         });
       }
     } catch (e) {
-      print('Error checking permissions: $e');
+      debugPrint('Error al verificar permisos: $e');
     }
   }
 
@@ -350,165 +359,62 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      key: _scaffoldKey,
-      appBar: AppBar(
-        forceMaterialTransparency: true,
+    final attendanceMenuItems = <Map<String, dynamic>>[];
+
+    if (_drawerPermissionOverview) {
+      attendanceMenuItems.add({
+        'icon': Icons.view_list_outlined,
+        'title': 'Resumen',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.attendanceOverview),
+      });
+    }
+
+    if (_drawerPermissionAttendance) {
+      attendanceMenuItems.add({
+        'icon': Icons.fact_check_outlined,
+        'title': 'Asistencia',
+        'onTap': () =>
+            Navigator.pushNamed(context, AppRoutes.attendanceAttendance),
+      });
+    }
+
+    if (_drawerPermissionAttendanceRequest) {
+      attendanceMenuItems.add({
+        'icon': Icons.edit_calendar_outlined,
+        'title': 'Solicitudes de Asistencia',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.attendanceRequest),
+      });
+    }
+
+    if (_drawerPermissionHourAccount) {
+      attendanceMenuItems.add({
+        'icon': Icons.timer_outlined,
+        'title': 'Cuenta de Horas',
+        'onTap': () =>
+            Navigator.pushNamed(context, AppRoutes.employeeHourAccount),
+      });
+    }
+
+    return DrawerWrapper(
+      appBarTitle: 'Asistencia',
+      userData: arguments.isNotEmpty ? arguments : null,
+      customMenuItems: _isPermissionCheckComplete ? attendanceMenuItems : [],
+      child: Scaffold(
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-        ),
-        title: const Text(
-          'Attendance Overview',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Padding(
+        body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: _isShimmerVisible
               ? _buildLoadingWidget()
-              : _buildAttendanceOverview()),
-      drawer: Drawer(
-        child: ListView(
-          padding: const EdgeInsets.all(0),
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(),
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Image.asset('Assets/horilla-logo.png'),
-                ),
-              ),
-            ),
-            _isPermissionCheckComplete
-                ? Column(
-                    children: [
-                      _drawerPermissionOverview
-                          ? ListTile(
-                              title: const Text('Overview'),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                    context, '/attendance_overview');
-                              },
-                            )
-                          : const SizedBox.shrink(),
-                      ListTile(
-                        title: const Text('Attendance'),
-                        onTap: () {
-                          Navigator.pushNamed(
-                              context, '/attendance_attendance');
-                        },
-                      ),
-                      ListTile(
-                        title: const Text('Attendance Request'),
-                        onTap: () {
-                          Navigator.pushNamed(context, '/attendance_request');
-                        },
-                      ),
-                      ListTile(
-                        title: const Text('Hour Account'),
-                        onTap: () {
-                          Navigator.pushNamed(
-                              context, '/employee_hour_account');
-                        },
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      shimmerListTile(),
-                      shimmerListTile(),
-                      shimmerListTile(),
-                      shimmerListTile(),
-                    ],
-                  ),
-          ],
+              : _buildAttendanceOverview(),
         ),
-      ),
-      bottomNavigationBar: (bottomBarPages.length <= maxCount)
-          ? AnimatedNotchBottomBar(
-              /// Provide NotchBottomBarController
-              notchBottomBarController: _controller,
-              color: Colors.red,
-              showLabel: true,
-              notchColor: Colors.red,
-              kBottomRadius: 28.0,
-              kIconSize: 24.0,
-
-              /// restart app if you change removeMargins
-              removeMargins: false,
-              bottomBarWidth: MediaQuery.of(context).size.width * 1,
-              durationInMilliSeconds: 300,
-              bottomBarItems: const [
-                BottomBarItem(
-                  inActiveItem: Icon(
-                    Icons.home_filled,
-                    color: Colors.white,
-                  ),
-                  activeItem: Icon(
-                    Icons.home_filled,
-                    color: Colors.white,
-                  ),
-                ),
-                BottomBarItem(
-                  inActiveItem: Icon(
-                    Icons.update_outlined,
-                    color: Colors.white,
-                  ),
-                  activeItem: Icon(
-                    Icons.update_outlined,
-                    color: Colors.white,
-                  ),
-                ),
-                BottomBarItem(
-                  inActiveItem: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                  ),
-                  activeItem: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-
-              onTap: (index) async {
-                switch (index) {
-                  case 0:
-                    Navigator.pushNamed(context, '/home');
-                    break;
-                  case 1:
-                    Navigator.pushNamed(context, '/employee_checkin_checkout');
-                    break;
-                  case 2:
-                    Navigator.pushNamed(context, '/employees_form',
-                        arguments: arguments);
-                    break;
-                }
-              },
-            )
-          : null,
-    );
-  }
-
-  Widget shimmerListTile() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: ListTile(
-        title: Container(
-          width: double.infinity,
-          height: 20.0,
-          color: Colors.white,
+        bottomNavigationBar: CustomBottomNavBar(
+          currentIndex: currentIndex,
+          arguments: arguments.isNotEmpty ? arguments : null,
+          onTap: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+          },
         ),
       ),
     );
@@ -543,8 +449,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                   itemCount: 2,
                   itemBuilder: (context, index) {
                     String text = index == 0
-                        ? '\nTODAY\'S\n ATTENDANCE\n$todayAttendance %'
-                        : '\nOFFLINE\nEMPLOYEES\n$offlineEmpCount';
+                        ? '\nASISTENCIA\nDE HOY\n$todayAttendance %'
+                        : '\nEMPLEADOS\nSIN MARCAR\n$offlineEmpCount';
                     return Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
@@ -598,15 +504,15 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
               children: [
                 TabBar(
                   controller: _tabController,
-                  indicatorColor: Colors.red,
-                  labelColor: Colors.red,
+                  indicatorColor: primaryColor,
+                  labelColor: primaryColor,
                   unselectedLabelColor: Colors.grey,
                   isScrollable: true,
                   labelStyle: TextStyle(
                       fontWeight: FontWeight.bold, fontSize: fontSize * 1.2),
                   tabs: [
-                    Tab(text: 'Overtime Validate ($overtimeValidate)'),
-                    Tab(text: 'Non Validated ($nonValidated)'),
+                    Tab(text: 'Validar horas extra ($overtimeValidate)'),
+                    Tab(text: 'No validadas ($nonValidated)'),
                   ],
                 ),
                 SizedBox(
@@ -726,8 +632,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                     itemCount: 2,
                     itemBuilder: (context, index) {
                       String headerText = index == 0
-                          ? 'TODAY\'S\nATTENDANCE\n'
-                          : 'OFFLINE\nEMPLOYEES\n';
+                          ? 'ASISTENCIA\nDE HOY\n'
+                          : 'EMPLEADOS\nSIN MARCAR\n';
                       String valueText = index == 0
                           ? ' $todayAttendance'
                           : ' $offlineEmpCount';
@@ -762,7 +668,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                         children: [
                           Flexible(
                             child: Text(
-                              'Offline Employees',
+                              'Empleados sin marcar',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: deviceWidth * 0.06,
@@ -843,7 +749,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                         ),
                                         SizedBox(height: 20),
                                         Text(
-                                          'There are no offline employees to display',
+                                          'No hay empleados sin marcar para mostrar',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 18,
@@ -860,7 +766,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                           getCurrentPageOfflineEmployees()[
                                               index];
                                       final leaveStatus =
-                                          record['leave_status'] ?? 'Unknown';
+                                          record['leave_status'] ?? 'Desconocido';
                                       return buildOfflineEmployeesTile(
                                           record,
                                           leaveStatus,
@@ -881,15 +787,15 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
               children: [
                 TabBar(
                   controller: _tabController,
-                  labelColor: Colors.red,
-                  indicatorColor: Colors.red,
+                  labelColor: primaryColor,
+                  indicatorColor: primaryColor,
                   unselectedLabelColor: Colors.grey,
                   isScrollable: true,
                   labelStyle: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 17),
                   tabs: [
-                    Tab(text: 'Overtime Validate ($overtimeValidate)'),
-                    Tab(text: 'Non Validated ($nonValidated)'),
+                    Tab(text: 'Validar horas extra ($overtimeValidate)'),
+                    Tab(text: 'No validadas ($nonValidated)'),
                   ],
                 ),
                 SizedBox(
@@ -909,7 +815,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                   ),
                                   SizedBox(height: 20),
                                   Text(
-                                    "There are no attendance records to display",
+                                    "No hay registros de asistencia para mostrar",
                                     style: TextStyle(
                                         fontSize: 16.0,
                                         color: Colors.black,
@@ -932,7 +838,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                   ),
                                   SizedBox(height: 20),
                                   Text(
-                                    "There are no attendance records to display",
+                                    "No hay registros de asistencia para mostrar",
                                     style: TextStyle(
                                         fontSize: 16.0,
                                         color: Colors.black,
@@ -988,7 +894,7 @@ Widget _buildGridItem(
               style: TextStyle(
                 fontSize: responsiveFontSize(context, 15.0, 12.0),
                 fontWeight: FontWeight.bold,
-                color: Colors.red,
+                color: primaryColor,
               ),
             ),
             TextSpan(
@@ -1066,15 +972,15 @@ Widget buildOfflineEmployeesTile(
                 height: 25,
                 padding: const EdgeInsets.fromLTRB(10.0, 1.0, 10.0, 1.0),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.07),
+                  color: primaryColor.withOpacity(0.07),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: Center(
                   child: Text(
                     leaveStatus,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13.0,
-                      color: Colors.red,
+                      color: primaryColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1086,9 +992,9 @@ Widget buildOfflineEmployeesTile(
                   onTap: () {
                     _showEmailDialog(context, record, baseUrl);
                   },
-                  child: const Icon(
+                  child: Icon(
                     Icons.email_outlined,
-                    color: Colors.green,
+                    color: secondaryColor,
                   ),
                 ),
               ),
@@ -1171,7 +1077,7 @@ void _showEmailDialog(
                         color: Colors.black,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Select Template',
+                        labelText: 'Seleccionar plantilla',
                         border: OutlineInputBorder(),
                       ),
                       value: selectedTemplate,
@@ -1210,7 +1116,7 @@ void _showEmailDialog(
                     SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                     TextField(
                       decoration: const InputDecoration(
-                        labelText: 'Subject',
+                        labelText: 'Asunto',
                         border: OutlineInputBorder(),
                       ),
                       onChanged: (value) {
@@ -1224,7 +1130,7 @@ void _showEmailDialog(
                     // Editable HTML field with the persistent controller
                     TextField(
                       decoration: const InputDecoration(
-                        labelText: 'Edit Body Content',
+                        labelText: 'Editar contenido del cuerpo',
                         border: OutlineInputBorder(),
                       ),
                       maxLines: null,
@@ -1236,9 +1142,7 @@ void _showEmailDialog(
                       },
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    Html(
-                      data: bodyContent,
-                    ),
+                    Html(data: sanearHtml(bodyContent)),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                   ],
                 ),
@@ -1246,9 +1150,9 @@ void _showEmailDialog(
             ),
             actions: [
               TextButton(
-                child: const Text(
-                  'Send',
-                  style: TextStyle(color: Colors.red),
+                child: Text(
+                  'Enviar',
+                  style: TextStyle(color: primaryColor),
                 ),
                 onPressed: () async {
                   await sendEmail(
@@ -1339,7 +1243,7 @@ Future<void> sendEmail(
   request.fields['body'] = fetchedBodyContent;
   var response = await request.send();
   if (response.statusCode == 200) {
-    print('Email Sent Successfully');
+    debugPrint('Correo enviado correctamente');
   } else {}
 }
 
@@ -1506,13 +1410,13 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Attendance Date',
+                                      'Fecha de asistencia',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['attendance_date'] ?? 'None'),
+                                    Text(record['attendance_date'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1523,14 +1427,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check In',
+                                      'Entrada',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_in'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1541,14 +1445,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check In Date',
+                                      'Fecha de entrada',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_in_date'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1559,14 +1463,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check Out ',
+                                      'Salida',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_out'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1577,14 +1481,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check Out Date',
+                                      'Fecha de salida',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_out_date'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1595,13 +1499,13 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Shift',
+                                      'Turno',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['shift_name'] ?? 'None'),
+                                    Text(record['shift_name'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1612,14 +1516,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Work Type',
+                                      'Tipo de trabajo',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
-                                      record['work_type'] ?? 'None',
+                                      record['work_type'] ?? 'Sin datos',
                                       maxLines: 2,
                                     ),
                                   ],
@@ -1632,14 +1536,14 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'At Work',
+                                      'Horas trabajadas',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_worked_hour'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1650,13 +1554,13 @@ Widget buildOvertimeValidate(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Min Hour',
+                                      'Horas minimas',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['minimum_hour'] ?? 'None'),
+                                    Text(record['minimum_hour'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1982,13 +1886,13 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Attendance Date',
+                                      'Fecha de asistencia',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['attendance_date'] ?? 'None'),
+                                    Text(record['attendance_date'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -1999,14 +1903,14 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check In',
+                                      'Entrada',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_in'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2017,14 +1921,14 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check In Date',
+                                      'Fecha de entrada',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_in_date'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2035,14 +1939,14 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check Out ',
+                                      'Salida',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_out'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2053,14 +1957,14 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Check Out Date',
+                                      'Fecha de salida',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_clock_out_date'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2071,13 +1975,13 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Shift',
+                                      'Turno',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['shift_name'] ?? 'None'),
+                                    Text(record['shift_name'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2088,13 +1992,13 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Work Type',
+                                      'Tipo de trabajo',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['work_type'] ?? 'None'),
+                                    Text(record['work_type'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2105,14 +2009,14 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'At Work',
+                                      'Horas trabajadas',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(record['attendance_worked_hour'] ??
-                                        'None'),
+                                        'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(
@@ -2123,13 +2027,13 @@ Widget buildNonValidatedAttendance(
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Min Hour',
+                                      'Horas minimas',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(record['minimum_hour'] ?? 'None'),
+                                    Text(record['minimum_hour'] ?? 'Sin datos'),
                                   ],
                                 ),
                                 SizedBox(

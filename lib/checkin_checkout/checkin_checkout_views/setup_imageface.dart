@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:horilla/horilla_main/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 import 'checkin_checkout_form.dart';
+import '../../res/consts/app_colors.dart';
 
 class CameraSetupPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -15,7 +15,7 @@ class CameraSetupPage extends StatefulWidget {
   const CameraSetupPage({required this.cameras});
 
   @override
-  _CameraSetupPageState createState() => _CameraSetupPageState();
+  State<CameraSetupPage> createState() => _CameraSetupPageState();
 }
 
 class _CameraSetupPageState extends State<CameraSetupPage> {
@@ -67,7 +67,7 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
         });
       }
     } catch (e) {
-      print('Error setting up camera: $e');
+      debugPrint('Error al configurar la cámara: $e');
     }
   }
 
@@ -80,7 +80,7 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
         setState(() => _capturedImage = image);
       }
     } catch (e) {
-      print('Error taking picture: $e');
+      debugPrint('Error al tomar la foto: $e');
     }
   }
 
@@ -93,7 +93,7 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
         });
       }
     } catch (e) {
-      print('Error picking image: $e');
+      debugPrint('Error al seleccionar la imagen: $e');
     }
   }
 
@@ -159,26 +159,27 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
       // Convert to normal Response to access body
       var response = await http.Response.fromStream(streamedResponse);
 
-      print('===== Upload Debug Info =====');
-      print("Request: ${response.request}");
-      print("Status Code: ${response.statusCode}");
-      print("Headers: ${response.headers}");
-      print("Body: ${response.body}");
-      print("=============================");
+      debugPrint('===== Depuración de subida =====');
+      debugPrint("Request: ${response.request}");
+      debugPrint("Status Code: ${response.statusCode}");
+      debugPrint("Headers: ${response.headers}");
+      debugPrint("Body: ${response.body}");
+      debugPrint("===============================");
 
       if (response.statusCode == 201) {
         var face_detection_image = jsonDecode(response.body)['image'];
-        print('face_detection_image : $face_detection_image');
+        debugPrint('face_detection_image: $face_detection_image');
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('face_detection_image');
         await prefs.setString("face_detection_image", face_detection_image);
         _showCreateAnimation(context);
       } else {
-        _showErrorDialog(context, 'Error uploading image. Please try again.\n${response.body}');
+        _showErrorDialog(context,
+            'Error al subir la imagen. Intenta de nuevo.\n${response.body}');
       }
     } catch (e) {
-      print('Exception: $e');
-      _showErrorDialog(context, 'Something went wrong. Please try again.');
+      debugPrint('Excepción: $e');
+      _showErrorDialog(context, 'Algo salió mal. Intenta de nuevo.');
     }
   }
 
@@ -197,9 +198,13 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                 children: [
                   Image.asset("Assets/gif22.gif", width: 180, height: 180, fit: BoxFit.cover),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Face Image Uploaded Successfully",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+                  Text(
+                    "Imagen facial subida correctamente",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -210,7 +215,14 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => CheckInCheckOutFormPage()));
+      if (!mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => CheckInCheckOutFormPage()),
+      );
     });
   }
 
@@ -225,7 +237,7 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
             onPressed: () {
               Navigator.of(dialogContext).pop();
             },
-            child: const Text("OK"),
+            child: const Text("Aceptar"),
           ),
         ],
       ),
@@ -261,11 +273,11 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: backgroundColor,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: const Text('Face Image Capture', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.red,
+          title: const Text('Captura de imagen facial', style: TextStyle(color: Colors.white)),
+          backgroundColor: primaryColor,
           elevation: 0,
           actions: [
             IconButton(
@@ -285,7 +297,7 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                     height: 400,
                     child: Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.red[700]!, width: 3),
+                        border: Border.all(color: primaryColor, width: 3),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(color: Colors.grey.withOpacity(0.3), spreadRadius: 2, blurRadius: 5),
@@ -299,11 +311,11 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.done) {
                               if (snapshot.hasError || _controller == null || !_isControllerInitialized) {
-                                return const Center(child: Text('Camera Error'));
+                                return const Center(child: Text('Error de cámara'));
                               }
                               return CameraPreview(_controller!);
                             } else {
-                              return Center(child: CircularProgressIndicator(color: Colors.red[700]));
+                              return Center(child: CircularProgressIndicator(color: primaryColor));
                             }
                           },
                         )
@@ -328,9 +340,9 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                       ElevatedButton.icon(
                         onPressed: _isControllerInitialized ? _takePicture : null,
                         icon: const Icon(Icons.camera_alt, color: Colors.white),
-                        label: const Text('Capture', style: TextStyle(color: Colors.white)),
+                        label: const Text('Capturar', style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: primaryColor,
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -338,9 +350,9 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                       ElevatedButton.icon(
                         onPressed: _pickImage,
                         icon: const Icon(Icons.photo_library, color: Colors.white),
-                        label: const Text('Gallery', style: TextStyle(color: Colors.white)),
+                        label: const Text('Galería', style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: secondaryColor,
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -349,11 +361,11 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                     if (_capturedImage != null) ...[
                       OutlinedButton.icon(
                         onPressed: _retakePicture,
-                        icon: const Icon(Icons.refresh, color: Colors.red),
-                        label: const Text('Retake'),
+                        icon: Icon(Icons.refresh, color: primaryColor),
+                        label: const Text('Repetir'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red[700],
-                          side: BorderSide(color: Colors.red!),
+                          foregroundColor: primaryColor,
+                          side: BorderSide(color: primaryColor),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -361,13 +373,13 @@ class _CameraSetupPageState extends State<CameraSetupPage> {
                       ElevatedButton.icon(
                         onPressed: _submitPicture,
                         icon: const Icon(Icons.check, color: Colors.white),
-                        label: const Text('Submit', style: TextStyle(color: Colors.white)),
+                        label: const Text('Guardar', style: TextStyle(color: Colors.white)),
                         style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.resolveWith((states) {
                             if (states.contains(MaterialState.pressed)) {
-                              return Colors.green.withOpacity(0.6);
+                              return primaryColor.withOpacity(0.6);
                             }
-                            return Colors.green;
+                            return primaryColor;
                           }),
                           foregroundColor: MaterialStateProperty.all(Colors.white),
                           padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),

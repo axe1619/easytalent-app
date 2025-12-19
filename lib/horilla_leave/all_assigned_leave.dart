@@ -8,6 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../res/utilities/drawer_wrapper.dart';
 import '../../res/utilities/custom_bottom_nav_bar.dart';
 import '../../core/routes/app_routes.dart';
+import '../../res/consts/app_colors.dart';
 
 class AllAssignedLeave extends StatefulWidget {
   const AllAssignedLeave({super.key});
@@ -689,17 +690,13 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
             Positioned(
               bottom: 80,
               right: 16,
-              child: FloatingActionButton.extended(
+              child: FloatingActionButton(
                 onPressed: () {
                   isAction = false;
                   _showCreateDialog(context);
                 },
-                backgroundColor: Colors.red,
-                icon: const Icon(Icons.assignment, color: Colors.white),
-                label: const Text(
-                  'ASIGNAR',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+                backgroundColor: primaryColor,
+                child: const Icon(Icons.assignment, color: Colors.white),
               ),
             ),
           ],

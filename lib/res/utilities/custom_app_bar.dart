@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../consts/app_colors.dart';
-import '../../core/routes/app_routes.dart';
 import '../../horilla_main/notifications_list.dart';
+import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/usecases/fetch_notifications_usecase.dart';
 import '../../domain/usecases/get_unread_count_usecase.dart';
 import '../../domain/usecases/delete_notification_usecase.dart';
 import '../../domain/usecases/delete_notifications_usecase.dart';
+import '../../main.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -48,10 +49,25 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           bulkDeleteNotificationsUseCase: bulkDeleteNotificationsUseCase!,
           employeeName: employeeName,
         ),
-      );
+      ).then((_) {
+        notificationManagerService.unreadNotificationsCount();
+      });
     } else {
       // Fallback a navegación si no hay casos de uso
-      Navigator.pushNamed(context, AppRoutes.home);
+      final repository = NotificationRepositoryImpl();
+      showDialog(
+        context: context,
+        builder: (context) => NotificationsModal(
+          fetchNotificationsUseCase: FetchNotificationsUseCase(repository),
+          getUnreadCountUseCase: GetUnreadCountUseCase(repository),
+          deleteNotificationUseCase: DeleteNotificationUseCase(repository),
+          bulkDeleteNotificationsUseCase:
+              BulkDeleteNotificationsUseCase(repository),
+          employeeName: employeeName,
+        ),
+      ).then((_) {
+        notificationManagerService.unreadNotificationsCount();
+      });
     }
   }
 
@@ -94,37 +110,65 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 _showNotificationsModal(context);
               },
             ),
-            if (notificationsCount != null && notificationsCount! > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Center(
-                    child: Text(
-                      notificationsCount! > 99 ? '99+' : '$notificationsCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+            if (notificationsCount != null)
+              if (notificationsCount! > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: _NotificationsBadge(count: notificationsCount!),
+                )
+              else
+                const SizedBox.shrink()
+            else
+              ValueListenableBuilder<int>(
+                valueListenable: notificationManagerService.unreadCountNotifier,
+                builder: (context, count, _) {
+                  if (count <= 0) return const SizedBox.shrink();
+                  return Positioned(
+                    right: 8,
+                    top: 8,
+                    child: _NotificationsBadge(count: count),
+                  );
+                },
               ),
           ],
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+}
+
+class _NotificationsBadge extends StatelessWidget {
+  final int count;
+
+  const _NotificationsBadge({this.count = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final displayText = count > 99 ? '99+' : '$count';
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: secondaryColor,
+        shape: BoxShape.circle,
+      ),
+      constraints: const BoxConstraints(
+        minWidth: 16,
+        minHeight: 16,
+      ),
+      child: Center(
+        child: Text(
+          displayText,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 }

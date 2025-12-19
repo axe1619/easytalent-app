@@ -2,23 +2,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'dart:io';
+import '../core/routes/app_routes.dart';
+import '../res/consts/app_colors.dart';
+import '../res/utilities/custom_bottom_nav_bar.dart';
+import '../res/utilities/drawer_wrapper.dart';
 
 class LeaveAllocationRequest extends StatefulWidget {
   const LeaveAllocationRequest({super.key});
 
   @override
-  _LeaveAllocationRequest createState() => _LeaveAllocationRequest();
+  State<LeaveAllocationRequest> createState() => _LeaveAllocationRequest();
 }
 
 class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
     with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _controller = NotchBottomBarController(index: -1);
+  int currentIndex = 0;
   final TextEditingController _typeAheadEditController =
   TextEditingController();
   final TextEditingController _typeAheadAddController = TextEditingController();
@@ -86,7 +88,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
   String? selectedEmployee;
   String? selectedEmployeeId;
   late String baseUrl = '';
-  late Map<String, dynamic> arguments;
+  Map<String, dynamic> arguments = {};
   late TabController _tabController;
   var employeeItems = [''];
   var leaveItems = [''];
@@ -108,6 +110,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
     fetchToken();
     prefetchData();
     _simulateLoading();
+    checkPermissions();
 
     _tabController = TabController(length: allocationCheck ? 2 : 1, vsync: this);
 
@@ -150,7 +153,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
     await permissionLeaveTypeChecks();
     await permissionLeaveRequestChecks();
     await permissionLeaveAssignChecks();
-    _isShimmerVisible = false;
+    if (mounted) {
+      setState(() {
+        _isShimmerVisible = false;
+      });
+    } else {
+      _isShimmerVisible = false;
+    }
   }
 
   @override
@@ -337,11 +346,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Allocation Created Successfully",
+                      "Asignación creada correctamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: Colors.indigo),
                     ),
                   ],
                 ),
@@ -380,11 +389,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Allocation Deleted Successfully",
+                      "Asignación eliminada correctamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: Colors.indigo),
                     ),
                   ],
                 ),
@@ -423,11 +432,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Allocation Approved Successfully",
+                      "Asignación aprobada correctamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: Colors.indigo),
                     ),
                   ],
                 ),
@@ -466,11 +475,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Allocation Rejected Successfully",
+                      "Asignación rechazada correctamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: Colors.indigo),
                     ),
                   ],
                 ),
@@ -509,11 +518,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     Image.asset(imagePath),
                     const SizedBox(height: 16),
                     const Text(
-                      "Allocation Updated Successfully",
+                      "Asignación actualizada correctamente",
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                          color: Colors.indigo),
                     ),
                   ],
                 ),
@@ -741,7 +750,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Edit Allocation",
+                      const Text("Editar asignación",
                           style: TextStyle(
                               fontSize: 21,
                               fontWeight: FontWeight.bold,
@@ -767,7 +776,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               child: Text(
                                 _errorMessage ?? '',
                                 style: const TextStyle(
-                                    color: Colors.red,
+                                    color: Colors.indigo,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -775,7 +784,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Leave Type",
+                            "Tipo de permiso",
                           ),
                           SizedBox(
                               height:
@@ -784,13 +793,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAheadEditController,
                               decoration: InputDecoration(
-                                labelText: 'Choose a Leave Type',
+                                labelText: 'Seleccione un tipo de permiso',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 errorText: _validateLeaveType
-                                    ? 'Please select a leave type'
+                                    ? 'Por favor seleccione un tipo de permiso'
                                     : null,
                               ),
                             ),
@@ -818,7 +827,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Leave Types Found',
+                                'No se encontraron tipos de permiso',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -843,7 +852,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Employee"),
+                            child: Text("Empleado"),
                           ),
                           SizedBox(
                               height:
@@ -852,13 +861,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeEditEmployeeController,
                               decoration: InputDecoration(
-                                labelText: 'Search Employee',
+                                labelText: 'Buscar empleado',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateEmployee
-                                    ? 'Please Select an Employee'
+                                    ? 'Por favor seleccione un empleado'
                                     : null,
                               ),
                             ),
@@ -885,7 +894,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Employees Found',
+                                'No se encontraron empleados',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -909,7 +918,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Requested Days",
+                            "Días solicitados",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -922,10 +931,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               border: const OutlineInputBorder(),
                               contentPadding: const EdgeInsets.symmetric(
                                   vertical: 10.0, horizontal: 10.0),
-                              labelText: 'Requested Days',
+                              labelText: 'Días solicitados',
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               errorText: _validateDays
-                                  ? 'Please enter Requested Days'
+                                  ? 'Por favor ingrese los días solicitados'
                                   : null,
                               suffixIcon: IntrinsicHeight(
                                 child: Column(
@@ -978,7 +987,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Description"),
+                            child: Text("Descripción"),
                           ),
                           SizedBox(
                               height:
@@ -992,7 +1001,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 errorText: _validateDescription
-                                    ? 'Description cannot be empty'
+                                    ? 'La descripción no puede estar vacía'
                                     : null,
                               ),
                               onChanged: (newValue) {
@@ -1009,7 +1018,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Attachment:',
+                                  'Adjunto:',
                                   style: TextStyle(color: Colors.grey.shade700),
                                 ),
                                 TextButton(
@@ -1038,10 +1047,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                     }
                                   },
                                   child: const Text(
-                                    'View Attachment',
+                                    'Ver adjunto',
                                     style: TextStyle(
                                       decoration: TextDecoration.underline,
-                                      color: Colors.blue,
+                                      color: Colors.indigo,
                                     ),
                                   ),
                                 ),
@@ -1070,7 +1079,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               contentPadding:
                               const EdgeInsets.symmetric(horizontal: 5.0),
                               errorText: _validateAttachment
-                                  ? 'Attachment is not given'
+                                  ? 'No se adjuntó ningún archivo'
                                   : null,
                             ),
                             readOnly: true,
@@ -1132,7 +1141,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         },
                         style: ButtonStyle(
                           backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
+                          MaterialStateProperty.all<Color>(primaryColor),
                           shape:
                           MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -1140,7 +1149,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             ),
                           ),
                         ),
-                        child: const Text('Save',
+                        child: const Text('Guardar',
                             style: TextStyle(color: Colors.white)),
                       ),
                     ),
@@ -1175,7 +1184,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Edit Allocation",
+              const Text("Editar asignación",
                   style: TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.bold,
@@ -1203,25 +1212,25 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                       child: Text(
                         _errorMessage ?? '',
                         style: const TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
+                            color: Colors.indigo, fontWeight: FontWeight.bold),
                       ),
                     ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                  const Text(
-                    "Leave Type",
-                  ),
+                          const Text(
+                            "Tipo de permiso",
+                          ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                   TypeAheadField<String>(
                     textFieldConfiguration: TextFieldConfiguration(
                       controller: _typeAheadEditController,
                       decoration: InputDecoration(
-                        labelText: 'Choose a Leave Type',
+                        labelText: 'Seleccione un tipo de permiso',
                         labelStyle: TextStyle(color: Colors.grey[350]),
                         border: const OutlineInputBorder(),
                         contentPadding:
                         const EdgeInsets.symmetric(horizontal: 10.0),
                         errorText: _validateLeaveType
-                            ? 'Please select a leave type'
+                            ? 'Por favor seleccione un tipo de permiso'
                             : null,
                       ),
                     ),
@@ -1249,7 +1258,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                     noItemsFoundBuilder: (context) => const Padding(
                       padding: EdgeInsets.all(8.0),
                       child: Text(
-                        'No Leave Types Found',
+                        'No se encontraron tipos de permiso',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -1271,7 +1280,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                   const Padding(
                     padding: EdgeInsets.all(4.0),
-                    child: Text("Requested Days"),
+                    child: Text("Días solicitados"),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                   TextField(
@@ -1281,10 +1290,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                       border: const OutlineInputBorder(),
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 10.0, horizontal: 10.0),
-                      labelText: 'Requested Days',
+                      labelText: 'Días solicitados',
                       labelStyle: TextStyle(color: Colors.grey[350]),
                       errorText:
-                      _validateDays ? 'Please enter Requested Days' : null,
+                      _validateDays
+                          ? 'Por favor ingrese los días solicitados'
+                          : null,
                       suffixIcon: IntrinsicHeight(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1333,7 +1344,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                   const Padding(
                     padding: EdgeInsets.all(4.0),
-                    child: Text("Description"),
+                    child: Text("Descripción"),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                   Padding(
@@ -1345,7 +1356,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         contentPadding:
                         const EdgeInsets.symmetric(horizontal: 10.0),
                         errorText: _validateDescriptions
-                            ? 'Description cannot be empty'
+                            ? 'La descripción no puede estar vacía'
                             : null,
                       ),
                       onChanged: (newValue) {
@@ -1360,7 +1371,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Attachment:',
+                          'Adjunto:',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
@@ -1388,10 +1399,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             }
                           },
                           child: const Text(
-                            'View Attachment',
+                            'Ver adjunto',
                             style: TextStyle(
                               decoration: TextDecoration.underline,
-                              color: Colors.blue,
+                              color: Colors.indigo,
                             ),
                           ),
                         ),
@@ -1420,7 +1431,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                       contentPadding:
                       const EdgeInsets.symmetric(horizontal: 5.0),
                       errorText: _validateAttachment
-                          ? 'Attachment is not given'
+                          ? 'No se adjuntó ningún archivo'
                           : null,
                     ),
                     readOnly: true,
@@ -1463,7 +1474,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   }
                 },
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
+                  backgroundColor: MaterialStateProperty.all<Color>(primaryColor),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6.0),
@@ -1471,7 +1482,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   ),
                 ),
                 child:
-                const Text('Save', style: TextStyle(color: Colors.white)),
+                const Text('Guardar', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -1488,9 +1499,9 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       return pickedFile;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No image selected'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('No se seleccionó ninguna imagen'),
+          backgroundColor: primaryColor,
         ),
       );
       return null;
@@ -1877,7 +1888,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Add Allocation',
+                      const Text('Crear asignación',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.black)),
@@ -1902,13 +1913,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               child: Text(
                                 _errorMessage ?? '',
                                 style: const TextStyle(
-                                    color: Colors.red,
+                                    color: Colors.indigo,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                           SizedBox(
                               height: MediaQuery.of(context).size.width * 0.03),
-                          const Text("Leave Type"),
+                          const Text("Tipo de permiso"),
                           SizedBox(
                               height:
                               MediaQuery.of(context).size.height * 0.01),
@@ -1916,13 +1927,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAheadAddController,
                               decoration: InputDecoration(
-                                labelText: 'Choose a Leave Type',
+                                labelText: 'Seleccione un tipo de permiso',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 errorText: _validateLeaveType
-                                    ? 'Please select a leave type'
+                                    ? 'Por favor seleccione un tipo de permiso'
                                     : null,
                               ),
                             ),
@@ -1950,7 +1961,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Leave Types Found',
+                                'No se encontraron tipos de permiso',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -1975,7 +1986,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Employee"),
+                            child: Text("Empleado"),
                           ),
                           SizedBox(
                               height:
@@ -1984,13 +1995,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAddEmployeeController,
                               decoration: InputDecoration(
-                                labelText: 'Search Employee',
+                                labelText: 'Buscar empleado',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
                                 border: const OutlineInputBorder(),
                                 errorText: _validateEmployee
-                                    ? 'Please Select an Employee'
+                                    ? 'Por favor seleccione un empleado'
                                     : null,
                               ),
                             ),
@@ -2017,7 +2028,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             noItemsFoundBuilder: (context) => const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                'No Employees Found',
+                                'No se encontraron empleados',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
@@ -2041,7 +2052,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               height:
                               MediaQuery.of(context).size.height * 0.03),
                           const Text(
-                            "Requested Days",
+                            "Días solicitados",
                             style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(
@@ -2054,10 +2065,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               border: const OutlineInputBorder(),
                               contentPadding: const EdgeInsets.symmetric(
                                   vertical: 10.0, horizontal: 10.0),
-                              labelText: 'Requested Days',
+                              labelText: 'Días solicitados',
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               errorText: _validateDays
-                                  ? 'Please enter Requested Days'
+                                  ? 'Por favor ingrese los días solicitados'
                                   : null,
                               suffixIcon: IntrinsicHeight(
                                 child: Column(
@@ -2108,7 +2119,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           SizedBox(
                               height:
                               MediaQuery.of(context).size.height * 0.03),
-                          const Text("Description"),
+                          const Text("Descripción"),
                           SizedBox(
                               height:
                               MediaQuery.of(context).size.height * 0.01),
@@ -2116,12 +2127,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             controller: allocationDescription,
                             decoration: InputDecoration(
                               border: const OutlineInputBorder(),
-                              labelText: "Description",
+                              labelText: "Descripción",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               contentPadding:
                               const EdgeInsets.symmetric(horizontal: 10.0),
                               errorText: _validateAllocateDescriptions
-                                  ? 'Description cannot be empty'
+                                  ? 'La descripción no puede estar vacía'
                                   : null,
                             ),
                             onChanged: (newValue) {
@@ -2156,12 +2167,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               contentPadding:
                               const EdgeInsets.symmetric(horizontal: 5.0),
                               errorText: _validateAttachment
-                                  ? 'Attachment is not given'
+                                  ? 'No se adjuntó ningún archivo'
                                   : null,
                               suffixIcon: _fileNameController.text.isNotEmpty
                                   ? IconButton(
                                 icon: const Icon(Icons.close,
-                                    color: Colors.red),
+                                    color: Colors.indigo),
                                 onPressed: () {
                                   setState(() {
                                     _fileNameController.clear();
@@ -2264,7 +2275,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         },
                         style: ButtonStyle(
                           backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
+                          MaterialStateProperty.all<Color>(primaryColor),
                           shape:
                           MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -2273,7 +2284,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           ),
                         ),
                         child: const Text(
-                          "Save",
+                          "Guardar",
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -2297,259 +2308,119 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
     List<Widget> tabs = [];
     if (allocationCheck) {
       tabs = [
-        Tab(text: 'Leave allocation request(${allRequests.length})'),
-        Tab(text: 'My leave allocation(${myAllRequests.length})'),
+        Tab(text: 'Solicitudes de asignación (${allRequests.length})'),
+        Tab(text: 'Mis asignaciones (${myAllRequests.length})'),
       ];
     } else {
       tabs = [
-        Tab(text: 'My leave allocation(${myAllRequests.length})'),
+        Tab(text: 'Mis asignaciones (${myAllRequests.length})'),
       ];
     }
     if (!allocationCheck) {
       _tabController.index = 0;
     }
+
+    final List<Map<String, dynamic>> leaveMenuItems = [];
+    if (permissionLeaveOverviewCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.dashboard_outlined,
+        'title': 'Resumen',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveOverview),
+      });
+    }
+    if (permissionMyLeaveRequestCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.assignment_outlined,
+        'title': 'Mis Solicitudes',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.myLeaveRequest),
+      });
+    }
+    if (permissionLeaveRequestCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.request_quote,
+        'title': 'Solicitud de Permiso',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveRequest),
+      });
+    }
+    if (permissionLeaveTypeCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.category_outlined,
+        'title': 'Tipos de Permiso',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.leaveTypes),
+      });
+    }
+    if (permissionLeaveAllocationCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.assignment_outlined,
+        'title': 'Solicitud de Asignación',
+        'onTap': () =>
+            Navigator.pushNamed(context, AppRoutes.leaveAllocationRequest),
+      });
+    }
+    if (permissionLeaveAssignCheck) {
+      leaveMenuItems.add({
+        'icon': Icons.assignment_ind_outlined,
+        'title': 'Todos los Permisos Asignados',
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.allAssignedLeave),
+      });
+    }
+
     return DefaultTabController(
       length: tabs.length,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        key: _scaffoldKey,
-        appBar: AppBar(
+      child: DrawerWrapper(
+        appBarTitle: 'Asignación de permisos',
+        userData: arguments.isNotEmpty ? arguments : null,
+        customMenuItems: leaveMenuItems,
+        child: Scaffold(
           backgroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              _scaffoldKey.currentState?.openDrawer();
-            },
-          ),
-          automaticallyImplyLeading: false,
-          title: const Row(
+          body: Stack(
             children: [
-              Text(
-                'Allocation',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+              _isShimmerVisible
+                  ? _buildLoadingWidget()
+                  : _buildAllocationRequestWidget(),
+              if (!_isShimmerVisible && permissionAllocationCheck)
+                Positioned(
+                  bottom: 80,
+                  right: 16,
+                  child: FloatingActionButton(
+                    mini: true,
+                    onPressed: () {
+                      setState(() {
+                        isSaveClick = true;
+                        _validateLeaveType = false;
+                        _validateAllocateDescriptions = false;
+                        _validateDays = false;
+                        _validateDescription = false;
+                        _validateEmployee = false;
+                        isAction = false;
+
+                        _fileNameController.clear();
+                        _errorMessage = null;
+                        selectedLeaveId = null;
+                        selectedEmployee = null;
+                        _typeAddEmployeeController.clear();
+                        _typeAheadAddController.clear();
+                        _controllerValue.clear();
+                        allocationDescription.clear();
+                      });
+                      _showCreateDialog(context);
+                    },
+                    backgroundColor: primaryColor,
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
                 ),
-              ),
             ],
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    isSaveClick = true;
-                    _validateLeaveType = false;
-                    _validateAllocateDescriptions = false;
-                    _validateDays = false;
-                    _validateDescription = false;
-                    _validateEmployee = false;
-                    isAction = false;
-
-                    _fileNameController.clear();
-                    _errorMessage = null;
-                    selectedLeaveId = null;
-                    selectedEmployee = null;
-                    _typeAddEmployeeController.clear();
-                    _typeAheadAddController.clear();
-                    _controllerValue.clear();
-                    allocationDescription.clear();
-                  });
-                  _showCreateDialog(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(75, 50),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.0),
-                  ),
-                  side: const BorderSide(color: Colors.red),
-                ),
-                child:
-                const Text('CREATE', style: TextStyle(color: Colors.red)),
-              ),
-            ),
-          ],
-        ),
-        body: _isShimmerVisible
-            ? _buildLoadingWidget()
-            : _buildAllocationRequestWidget(),
-        drawer: Drawer(
-          child: FutureBuilder<void>(
-            future: checkPermissions(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                // Show shimmer effect while waiting
-                return ListView(
-                  padding: const EdgeInsets.all(0),
-                  children: [
-                    DrawerHeader(
-                      decoration: const BoxDecoration(),
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Image.asset(
-                            'Assets/horilla-logo.png',
-                          ),
-                        ),
-                      ),
-                    ),
-                    shimmerListTile(),
-                    shimmerListTile(),
-                    shimmerListTile(),
-                    shimmerListTile(),
-                    shimmerListTile(),
-                    shimmerListTile(),
-                  ],
-                );
-              } else if (snapshot.hasError) {
-                return const Center(child: Text('Error loading permissions.'));
-              } else {
-                return ListView(
-                  padding: const EdgeInsets.all(0),
-                  children: [
-                    DrawerHeader(
-                      decoration: const BoxDecoration(),
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Image.asset(
-                            'Assets/horilla-logo.png',
-                          ),
-                        ),
-                      ),
-                    ),
-                    permissionLeaveOverviewCheck
-                        ? ListTile(
-                      title: const Text('Overview'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/leave_overview');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                    permissionMyLeaveRequestCheck
-                        ? ListTile(
-                      title: const Text('My Leave Request'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/my_leave_request');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                    permissionLeaveRequestCheck
-                        ? ListTile(
-                      title: const Text('Leave Request'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/leave_request');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                    permissionLeaveTypeCheck
-                        ? ListTile(
-                      title: const Text('Leave Type'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/leave_types');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                    permissionLeaveAllocationCheck
-                        ? ListTile(
-                      title: const Text('Leave Allocation Request'),
-                      onTap: () {
-                        Navigator.pushNamed(
-                            context, '/leave_allocation_request');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                    permissionLeaveAssignCheck
-                        ? ListTile(
-                      title: const Text('All Assigned Leave'),
-                      onTap: () {
-                        Navigator.pushNamed(
-                            context, '/all_assigned_leave');
-                      },
-                    )
-                        : const SizedBox.shrink(),
-
-                  ],
-                );
-              }
+          bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: currentIndex,
+            arguments: arguments,
+            onTap: (index) {
+              setState(() {
+                currentIndex = index;
+              });
             },
           ),
         ),
-        bottomNavigationBar: (bottomBarPages.length <= maxCount)
-            ? AnimatedNotchBottomBar(
-          /// Provide NotchBottomBarController
-          notchBottomBarController: _controller,
-          color: Colors.red,
-          showLabel: true,
-          notchColor: Colors.red,
-          kBottomRadius: 28.0,
-          kIconSize: 24.0,
-
-          /// restart app if you change removeMargins
-          removeMargins: false,
-          bottomBarWidth: MediaQuery.of(context).size.width * 1,
-          durationInMilliSeconds: 300,
-          bottomBarItems: const [
-            BottomBarItem(
-              inActiveItem: Icon(
-                Icons.home_filled,
-                color: Colors.white,
-              ),
-              activeItem: Icon(
-                Icons.home_filled,
-                color: Colors.white,
-              ),
-              // itemLabel: 'Home',
-            ),
-            BottomBarItem(
-              inActiveItem: Icon(
-                Icons.update_outlined,
-                color: Colors.white,
-              ),
-              activeItem: Icon(
-                Icons.update_outlined,
-                color: Colors.white,
-              ),
-            ),
-            BottomBarItem(
-              inActiveItem: Icon(
-                Icons.person,
-                color: Colors.white,
-              ),
-              activeItem: Icon(
-                Icons.person,
-                color: Colors.white,
-              ),
-            ),
-          ],
-
-          onTap: (index) async {
-            switch (index) {
-              case 0:
-                Navigator.pushNamed(context, '/home');
-                break;
-              case 1:
-                Navigator.pushNamed(
-                    context, '/employee_checkin_checkout');
-                break;
-              case 2:
-                Navigator.pushNamed(context, '/employees_form',
-                    arguments: arguments);
-                break;
-            }
-          },
-        )
-            : null,
       ),
     );
   }
@@ -2573,8 +2444,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
     List<Widget> tabViews = [];
     if (allocationCheck) {
       tabs = [
-        Tab(text: 'Leave allocation request(${allRequests.length})'),
-        Tab(text: 'My leave allocation(${myAllRequests.length})'),
+        Tab(text: 'Solicitudes de asignación (${allRequests.length})'),
+        Tab(text: 'Mis asignaciones (${myAllRequests.length})'),
       ];
       tabViews = [
         buildTabContent(allRequests),
@@ -2582,7 +2453,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       ];
     } else {
       tabs = [
-        Tab(text: 'My leave allocation(${myAllRequests.length})'),
+        Tab(text: 'Mis asignaciones (${myAllRequests.length})'),
       ];
       tabViews = [
         buildTabContents(myAllRequests),
@@ -2625,8 +2496,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
         ),
         SizedBox(height: MediaQuery.of(context).size.height * 0.02),
         TabBar(
-          labelColor: Colors.red,
-          indicatorColor: Colors.red,
+          labelColor: primaryColor,
+          indicatorColor: primaryColor,
           unselectedLabelColor: Colors.grey,
           isScrollable: true,
           tabs: tabs,
@@ -2647,8 +2518,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
 
     if (allocationCheck) {
       tabs = [
-        Tab(text: 'Leave allocation request($leaveAllocationRequestCount)'),
-        Tab(text: 'My leave allocation($myLeaveAllocationCount)'),
+        Tab(text: 'Solicitudes de asignación ($leaveAllocationRequestCount)'),
+        Tab(text: 'Mis asignaciones ($myLeaveAllocationCount)'),
       ];
       tabViews = [
         leaveAllocationRequestCount == 0
@@ -2712,7 +2583,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       ];
     } else {
       tabs = [
-        Tab(text: 'My leave allocation(${myAllRequests.length})'),
+        Tab(text: 'Mis asignaciones (${myAllRequests.length})'),
       ];
       tabViews = [
         myLeaveAllocationCount == 0
@@ -2795,8 +2666,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.02),
             TabBar(
-              labelColor: Colors.red,
-              indicatorColor: Colors.red,
+              labelColor: primaryColor,
+              indicatorColor: primaryColor,
               unselectedLabelColor: Colors.grey,
               isScrollable: true,
               tabs: tabs,
@@ -3013,27 +2884,27 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Requested days',
+                                'Días solicitados',
                                 style: TextStyle(color: Colors.grey.shade700),
                               ),
-                              Text('${record['requested_days'] ?? "None"}'),
+                              Text('${record['requested_days'] ?? "No disponible"}'),
                             ],
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Leave Type',
+                                'Tipo de permiso',
                                 style: TextStyle(color: Colors.grey.shade700),
                               ),
-                              Text('${record['leave_type_id']['name'] ?? "None"}'),
+                              Text('${record['leave_type_id']['name'] ?? "No disponible"}'),
                             ],
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Description',
+                                'Descripción',
                                 style: TextStyle(color: Colors.grey.shade700),
                               ),
                             ],
@@ -3049,10 +2920,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                     color: Colors.grey.shade300,
                                   ),
                                 ),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.vertical,
-                                  child: Text(record['description'] ?? "None"),
-                                ),
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.vertical,
+                                    child: Text(record['description'] ?? "No disponible"),
+                                  ),
                               ),
                             ],
                           ),
@@ -3061,7 +2932,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Attachment:',
+                                  'Adjunto:',
                                   style: TextStyle(color: Colors.grey.shade700),
                                 ),
                                 TextButton(
@@ -3089,10 +2960,10 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                     }
                                   },
                                   child: const Text(
-                                    'View Attachment',
+                                    'Ver adjunto',
                                     style: TextStyle(
                                       decoration: TextDecoration.underline,
-                                      color: Colors.blue,
+                                      color: Colors.indigo,
                                     ),
                                   ),
                                 ),
@@ -3249,7 +3120,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                 topRight: Radius.circular(15.0),
                                 bottomRight: Radius.circular(15.0),
                               ),
-                              color: Colors.red[100],
+                              color: primaryColor.withAlpha(20),
                             ),
                             child: Visibility(
                               visible: record['status'] == 'requested',
@@ -3292,7 +3163,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               0.1,
                                           child: const Center(
                                             child: Text(
-                                              "Are you sure you want to delete this request?",
+                                              "¿Está seguro de que desea eliminar esta solicitud?",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black,
@@ -3318,7 +3189,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               style: ButtonStyle(
                                                 backgroundColor:
                                                 MaterialStateProperty.all<
-                                                    Color>(Colors.red),
+                                                    Color>(primaryColor),
                                                 shape:
                                                 MaterialStateProperty.all<
                                                     RoundedRectangleBorder>(
@@ -3330,7 +3201,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                 ),
                                               ),
                                               child: const Text(
-                                                "Continue",
+                                                "Continuar",
                                                 style: TextStyle(
                                                     color: Colors.white),
                                               ),
@@ -3352,7 +3223,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Requested Days',
+                      Text('Días solicitados',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Text('${record['requested_days']}'),
                     ],
@@ -3360,7 +3231,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Leave Type',
+                      Text('Tipo de permiso',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Text('${record['leave_type_id']['name']}'),
                     ],
@@ -3368,7 +3239,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Status',
+                      Text('Estado',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -3594,7 +3465,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Leave Type',
+                            'Tipo de permiso',
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                           Text('${record['leave_type_id']['name']}'),
@@ -3604,7 +3475,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Requested days',
+                            'Días solicitados',
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                           Text('${record['requested_days']}'),
@@ -3614,7 +3485,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Description',
+                            'Descripción',
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                         ],
@@ -3644,7 +3515,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Attachment:',
+                              'Adjunto:',
                               style: TextStyle(color: Colors.grey.shade700),
                             ),
                             TextButton(
@@ -3671,13 +3542,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   );
                                 }
                               },
-                              child: const Text(
-                                'View Attachment',
-                                style: TextStyle(
-                                  decoration: TextDecoration.underline,
-                                  color: Colors.blue,
-                                ),
-                              ),
+                                  child: const Text(
+                                    'Ver adjunto',
+                                    style: TextStyle(
+                                      decoration: TextDecoration.underline,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
                             ),
                           ],
                         ),
@@ -3721,7 +3592,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               0.1,
                                           child: const Center(
                                             child: Text(
-                                              "Are you sure you want to Reject this request?",
+                                              "¿Seguro que desea rechazar esta solicitud?",
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.black,
@@ -3748,7 +3619,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               style: ButtonStyle(
                                                 backgroundColor:
                                                 MaterialStateProperty.all<
-                                                    Color>(Colors.red),
+                                                    Color>(primaryColor),
                                                 shape:
                                                 MaterialStateProperty.all<
                                                     RoundedRectangleBorder>(
@@ -3759,7 +3630,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                   ),
                                                 ),
                                               ),
-                                              child: const Text("Continue",
+                                              child: const Text("Continuar",
                                                   style: TextStyle(
                                                       color: Colors.white)),
                                             ),
@@ -3770,13 +3641,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: primaryColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                 ),
                                 child: const Text(
-                                  'Reject',
+                                  'Rechazar',
                                   style: TextStyle(
                                       fontSize: 14, color: Colors.white),
                                 ),
@@ -3819,7 +3690,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               0.1,
                                           child: const Center(
                                             child: Text(
-                                              "Are you sure you want to Approve this request?",
+                                              "¿Seguro que desea aprobar esta solicitud?",
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.black,
@@ -3851,7 +3722,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                   ),
                                                 ),
                                               ),
-                                              child: const Text("Approve",
+                                              child: const Text("Aprobar",
                                                   style: TextStyle(
                                                       color: Colors.white)),
                                             ),
@@ -3872,7 +3743,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   ),
                                 ),
                                 child: const Text(
-                                  'Approve',
+                                  'Aprobar',
                                   style: TextStyle(
                                       fontSize: 14, color: Colors.white),
                                 ),
@@ -4036,7 +3907,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   topRight: Radius.circular(15.0),
                                   bottomRight: Radius.circular(15.0),
                                 ),
-                                color: Colors.red[100],
+                                color: primaryColor.withAlpha(20),
                               ),
                               child: Padding(
                                 padding:
@@ -4045,7 +3916,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   icon: const Icon(
                                     Icons.delete,
                                     size: 18.0,
-                                    color: Colors.red,
+                                    color: Colors.indigo,
                                   ),
                                   onPressed: () async {
                                     isSaveClick = true;
@@ -4081,7 +3952,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                 0.1,
                                             child: const Center(
                                               child: Text(
-                                                "Are you sure you want to delete this request?",
+                                                "¿Está seguro de que desea eliminar esta solicitud?",
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.black,
@@ -4107,7 +3978,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                 style: ButtonStyle(
                                                   backgroundColor:
                                                   MaterialStateProperty.all<
-                                                      Color>(Colors.red),
+                                                      Color>(primaryColor),
                                                   shape:
                                                   MaterialStateProperty.all<
                                                       RoundedRectangleBorder>(
@@ -4119,7 +3990,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                                   ),
                                                 ),
                                                 child: const Text(
-                                                  "Continue",
+                                                  "Continuar",
                                                   style: TextStyle(
                                                       color: Colors.white),
                                                 ),
@@ -4141,7 +4012,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Requested Days',
+                      Text('Días solicitados',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Text('${record['requested_days']}'),
                     ],
@@ -4149,7 +4020,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Leave Type',
+                      Text('Tipo de permiso',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Text('${record['leave_type_id']['name']}'),
                     ],
@@ -4157,7 +4028,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Status',
+                      Text('Estado',
                           style: TextStyle(color: Colors.grey.shade700)),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -4218,7 +4089,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                           0.1,
                                       child: const Center(
                                         child: Text(
-                                          "Are you sure you want to Reject this request?",
+                                          "¿Seguro que desea rechazar esta solicitud?",
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black,
@@ -4245,7 +4116,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                           style: ButtonStyle(
                                             backgroundColor:
                                             MaterialStateProperty.all<
-                                                Color>(Colors.red),
+                                                Color>(primaryColor),
                                             shape: MaterialStateProperty.all<
                                                 RoundedRectangleBorder>(
                                               RoundedRectangleBorder(
@@ -4254,7 +4125,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               ),
                                             ),
                                           ),
-                                          child: const Text("Continue",
+                                          child: const Text("Continuar",
                                               style: TextStyle(
                                                   color: Colors.white)),
                                         ),
@@ -4265,13 +4136,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
+                              backgroundColor: primaryColor,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                               ),
                             ),
                             child: const Text(
-                              'Reject',
+                              'Rechazar',
                               style:
                               TextStyle(fontSize: 14, color: Colors.white),
                             ),
@@ -4316,7 +4187,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                           0.1,
                                       child: const Center(
                                         child: Text(
-                                          "Are you sure you want to Approve this request?",
+                                          "¿Seguro que desea aprobar esta solicitud?",
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black,
@@ -4349,7 +4220,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                               ),
                                             ),
                                           ),
-                                          child: const Text("Approve",
+                                          child: const Text("Aprobar",
                                               style: TextStyle(
                                                   color: Colors.white)),
                                         ),
@@ -4369,7 +4240,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               ),
                             ),
                             child: const Text(
-                              'Approve',
+                              'Aprobar',
                               style:
                               TextStyle(fontSize: 14, color: Colors.white),
                             ),
@@ -4398,15 +4269,15 @@ class StateInfo {
 StateInfo _getStateInfo(String state) {
   switch (state) {
     case 'requested':
-      return StateInfo(Colors.yellow[700]!, 'Requested');
+      return StateInfo(lightBlueColor, 'Solicitado');
     case 'approved':
-      return StateInfo(Colors.green, 'Approved');
+      return StateInfo(secondaryColor, 'Aprobado');
     case 'cancelled':
-      return StateInfo(Colors.red, 'Cancelled');
+      return StateInfo(Colors.grey, 'Cancelado');
     case 'rejected':
-      return StateInfo(Colors.orange[700]!, 'Rejected');
+      return StateInfo(primaryColor.withAlpha(180), 'Rechazado');
     default:
-      return StateInfo(Colors.black, 'Unknown');
+      return StateInfo(blackColor, 'Desconocido');
   }
 }
 
@@ -4424,7 +4295,7 @@ class ImageViewer extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('Image Viewer'),
+        title: const Text('Visor de imagen'),
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -4436,8 +4307,8 @@ class ImageViewer extends StatelessWidget {
           },
           errorBuilder: (context, error, stackTrace) {
             return const Text(
-              'Error loading image',
-              style: TextStyle(color: Colors.red),
+              'Error al cargar la imagen',
+              style: TextStyle(color: Colors.indigo),
             );
           },
         )
@@ -4446,14 +4317,14 @@ class ImageViewer extends StatelessWidget {
           File(imagePath),
           errorBuilder: (context, error, stackTrace) {
             return const Text(
-              'Error loading image',
-              style: TextStyle(color: Colors.red),
+              'Error al cargar la imagen',
+              style: TextStyle(color: Colors.indigo),
             );
           },
         )
             : const Text(
-          'Image not found',
-          style: TextStyle(color: Colors.red),
+          'Imagen no encontrada',
+          style: TextStyle(color: Colors.indigo),
         ),
       ),
     );

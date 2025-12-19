@@ -17,12 +17,12 @@ class FaceScannerController {
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        throw Exception('Camera permission not granted');
+        throw Exception('Permiso de cámara no concedido');
       }
 
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        throw Exception('No cameras available');
+        throw Exception('No hay cámaras disponibles');
       }
       selectedCamera = cameras.firstWhere(
             (camera) => camera.lensDirection == CameraLensDirection.front,
@@ -38,9 +38,9 @@ class FaceScannerController {
 
       await cameraController.initialize();
       _isInitialized = true;
-      log('Camera initialized successfully');
+      log('Cámara inicializada correctamente');
     } catch (e) {
-      log('Error initializing camera: $e');
+      log('Error al inicializar la cámara: $e');
       _isInitialized = false;
       rethrow;
     }
@@ -48,28 +48,28 @@ class FaceScannerController {
 
   Future<XFile?> captureImage() async {
     if (!_isInitialized || !cameraController.value.isInitialized) {
-      log('Camera not initialized or already disposed');
+      log('La cámara no está inicializada o ya fue liberada');
       return null;
     }
     try {
       if (cameraController.value.isTakingPicture) {
-        log('Camera is already taking a picture');
+        log('La cámara ya está tomando una foto');
         return null;
       }
       await Future.delayed(const Duration(milliseconds: 200));
       final image = await cameraController.takePicture();
-      log('Image captured successfully at ${image.path}');
+      log('Imagen capturada correctamente en ${image.path}');
       final file = File(image.path);
       if (!file.existsSync()) {
-        throw Exception('Captured image file not found');
+        throw Exception('No se encontró el archivo de la imagen capturada');
       }
       final length = await file.length();
       if (length == 0) {
-        throw Exception('Captured image file is empty');
+        throw Exception('El archivo de la imagen capturada está vacío');
       }
       return image;
     } catch (e) {
-      log('Error capturing image: $e');
+      log('Error al capturar imagen: $e');
       return null;
     }
   }
@@ -77,18 +77,18 @@ class FaceScannerController {
   Future<bool> compareFaces(File capturedImageFile, String storedImageBase64) async {
     try {
       if (!await capturedImageFile.exists()) {
-        throw Exception('Captured image file not found at: ${capturedImageFile.path}');
+        throw Exception('No se encontró el archivo de la imagen capturada en: ${capturedImageFile.path}');
       }
       final storedImageBytes = base64Decode(storedImageBase64);
       if (storedImageBytes.isEmpty) {
-        throw Exception('Stored image bytes are empty');
+        throw Exception('La imagen almacenada está vacía');
       }
       final capturedImageBytes = await capturedImageFile.readAsBytes();
       if (capturedImageBytes.isEmpty) {
-        throw Exception('Captured image bytes are empty');
+        throw Exception('La imagen capturada está vacía');
       }
-      log('Stored image size: ${storedImageBytes.length} bytes');
-      log('Captured image size: ${capturedImageBytes.length} bytes');
+      log('Tamaño imagen almacenada: ${storedImageBytes.length} bytes');
+      log('Tamaño imagen capturada: ${capturedImageBytes.length} bytes');
 
       final storedFaceImage = MatchFacesImage(storedImageBytes, ImageType.PRINTED);
       final capturedFaceImage = MatchFacesImage(capturedImageBytes, ImageType.LIVE);
@@ -99,13 +99,13 @@ class FaceScannerController {
 
       if (split.matchedFaces.isNotEmpty) {
         final similarity = split.matchedFaces[0].similarity;
-        log('Face comparison similarity: $similarity');
+        log('Similitud de comparación: $similarity');
         return similarity >= 0.80;
       }
-      log('No matched faces found');
+      log('No se encontraron coincidencias');
       return false;
     } catch (e, stack) {
-      log('Error in face comparison: $e\n$stack');
+      log('Error en comparación facial: $e\n$stack');
       return false;
     }
   }
@@ -113,7 +113,7 @@ class FaceScannerController {
   void dispose() {
     if (cameraController.value.isInitialized) {
       cameraController.dispose();
-      log('Camera controller disposed');
+      log('Controlador de cámara liberado');
     }
   }
 }

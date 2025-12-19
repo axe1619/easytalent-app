@@ -17,6 +17,8 @@ class NotificationManagerService {
   final MarkAllReadUseCase _markAllReadUseCase;
   final LocalStorageService _localStorageService;
 
+  final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
+
   Timer? _notificationTimer;
   int _currentPage = 1;
   bool _isFirstFetch = true;
@@ -45,6 +47,7 @@ class NotificationManagerService {
     final isAuthenticated = await _localStorageService.isAuthenticated();
     if (isAuthenticated) {
       await _loadEmployeeName();
+      await unreadNotificationsCount();
       startNotificationTimer();
     }
   }
@@ -131,6 +134,7 @@ class NotificationManagerService {
         _seenNotificationIds.addAll(newNotificationIds);
         _notifications = filteredNotifications;
         _notificationsCount = response.count;
+        unreadCountNotifier.value = _notificationsCount;
         _isFirstFetch = false;
       }
 
@@ -149,6 +153,7 @@ class NotificationManagerService {
 
     try {
       _notificationsCount = await _getUnreadCountUseCase.execute();
+      unreadCountNotifier.value = _notificationsCount;
       _isLoading = false;
     } catch (e) {
       print('Error getting unread count: $e');
@@ -181,5 +186,6 @@ class NotificationManagerService {
 
   void dispose() {
     stopNotificationTimer();
+    unreadCountNotifier.dispose();
   }
 }

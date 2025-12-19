@@ -9,13 +9,13 @@ import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
-import '../../horilla_main/login.dart';
+import '../../res/consts/app_colors.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
 
   @override
-  _MapScreenState createState() => _MapScreenState();
+  State<MapScreen> createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
@@ -55,12 +55,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         String name = "${place.locality ?? ''}, ${place.country ?? ''}".trim();
-        return name.isEmpty ? "Unknown Location" : name;
+        return name.isEmpty ? "Ubicación desconocida" : name;
       }
-      return "Unknown Location";
+      return "Ubicación desconocida";
     } catch (e) {
-      print('Error getting location name: $e');
-      return "Unknown Location";
+      debugPrint('Error al obtener el nombre de ubicación: $e');
+      return "Ubicación desconocida";
     }
   }
 
@@ -96,23 +96,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error in Saving'),
+            SnackBar(
+              content: const Text('Error al guardar'),
               duration: Duration(seconds: 2),
+              backgroundColor: primaryColor,
             ),
           );
-          Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error in Saving'),
+          SnackBar(
+            content: const Text('Error al guardar'),
             duration: Duration(seconds: 2),
+            backgroundColor: primaryColor,
           ),
         );
-        Navigator.pop(context);
       }
     }
   }
@@ -148,23 +148,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error in Saving'),
+            SnackBar(
+              content: const Text('Error al guardar'),
               duration: Duration(seconds: 2),
+              backgroundColor: primaryColor,
             ),
           );
-          Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error in Saving'),
+          SnackBar(
+            content: const Text('Error al guardar'),
             duration: Duration(seconds: 2),
+            backgroundColor: primaryColor,
           ),
         );
-        Navigator.pop(context);
       }
     }
   }
@@ -194,23 +194,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Error in delete'),
-                duration: Duration(seconds: 2),
-              )
+              SnackBar(
+                content: const Text('Error al eliminar'),
+                duration: const Duration(seconds: 2),
+                backgroundColor: primaryColor,
+              ),
           );
-          Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error in delete'),
-              duration: Duration(seconds: 2),
-            )
+            SnackBar(
+              content: const Text('Error al eliminar'),
+              duration: const Duration(seconds: 2),
+              backgroundColor: primaryColor,
+            ),
         );
-        Navigator.pop(context);
       }
     }
   }
@@ -259,10 +259,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           }
         }
       } else {
-        print('Failed to load data: ${response.statusCode}');
+        debugPrint('No se pudo cargar la geocerca: ${response.statusCode}');
       }
     } catch (e) {
-      print("Error fetching geofence data: $e");
+      debugPrint("Error al obtener geocerca: $e");
     }
   }
 
@@ -294,12 +294,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     Image.asset(imagePath,
                         width: 180, height: 180, fit: BoxFit.cover),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Geofence Location Added Successfully",
+                    Text(
+                      "Ubicación de geocerca agregada correctamente",
                       style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
                     ),
                   ],
                 ),
@@ -312,6 +313,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -350,12 +354,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     Image.asset(imagePath,
                         width: 180, height: 180, fit: BoxFit.cover),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Geofence Location Deleted Successfully",
+                    Text(
+                      "Ubicación de geocerca eliminada correctamente",
                       style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
                     ),
                   ],
                 ),
@@ -368,6 +373,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -396,7 +404,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       return await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
     } catch (e) {
-      print('Error fetching location: $e');
+      debugPrint('Error al obtener ubicación: $e');
       return null;
     }
   }
@@ -405,9 +413,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.red,
+        backgroundColor: primaryColor,
         automaticallyImplyLeading: false,
-        title: const Text('Geofencing Map', style: TextStyle(color: Colors.white)),
+        title: const Text('Mapa de geocercas', style: TextStyle(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -460,24 +468,24 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     if (selectedLocation != null && _showTappedLocationCircle)
                       CircleMarker(
                         point: selectedLocation!.coordinates,
-                        color: Colors.blue.withOpacity(0.3),
-                        borderColor: Colors.blue,
+                        color: secondaryColor.withOpacity(0.3),
+                        borderColor: secondaryColor,
                         borderStrokeWidth: 2.0,
                         radius: selectedLocation!.radius,
                       ),
                     if (_showCurrentLocationCircle && userLocation != null)
                       CircleMarker(
                         point: LatLng(userLocation!.latitude, userLocation!.longitude),
-                        color: Colors.green.withOpacity(0.3),
-                        borderColor: Colors.green,
+                        color: primaryColor.withOpacity(0.3),
+                        borderColor: primaryColor,
                         borderStrokeWidth: 2.0,
                         radius: _currentRadius,
                       ),
                     if (responseData.isNotEmpty && !_showCurrentLocationCircle && !_showTappedLocationCircle)
                       CircleMarker(
                         point: LatLng(responseData['latitude'], responseData['longitude']),
-                        color: Colors.green.withOpacity(0.3),
-                        borderColor: Colors.green,
+                        color: primaryColor.withOpacity(0.3),
+                        borderColor: primaryColor,
                         borderStrokeWidth: 2.0,
                         radius: _currentRadius,
                       ),
@@ -496,9 +504,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           if (mounted) {
                             setState(() {
                               selectedLocation = loc;
-                              if (loc.isExisting) {
-                                _isExistingGeofence = true;
-                              }
+                              _isExistingGeofence = loc.isExisting;
+                              _showCurrentLocationCircle = false;
+                              _showTappedLocationCircle = true;
                             });
                             _mapController.animateTo(
                               dest: loc.coordinates,
@@ -508,7 +516,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         },
                         child: Icon(
                           Icons.location_on,
-                          color: Colors.red,
+                          color: secondaryColor,
                           size: 40.0,
                         ),
                       ),
@@ -538,7 +546,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 loc.name,
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('Radius: ${loc.radius.toStringAsFixed(1)} m'),
+                              Text('Radio: ${loc.radius.toStringAsFixed(1)} m'),
                             ],
                           ),
                         );
@@ -561,7 +569,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Location: ${selectedLocation!.name}',
+                        'Ubicación: ${selectedLocation!.name}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -578,14 +586,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             });
                           }
                         },
-                        icon: const Icon(Icons.close, color: Colors.red),
+                        icon: Icon(Icons.close, color: primaryColor),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Text('Geofence Radius: '),
+                      const Text('Radio de geocerca: '),
                       Expanded(
                         child: Slider(
                           value: _currentRadius,
@@ -633,14 +641,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red),
-                          child: const Text('Delete'),
+                              backgroundColor: primaryColor),
+                          child: const Text('Eliminar'),
                         ),
                       ElevatedButton(
                         onPressed: () async {
                           await showGeofencingSetting(context);
                         },
-                        child: const Text('Save'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: secondaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Guardar'),
                       ),
                     ],
                   ),
@@ -677,6 +689,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             );
           }
         },
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.my_location),
       ),
     );
@@ -689,14 +703,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Set Geofencing Location"),
-          content: const Text("Do you want to set this location for Geofencing?"),
+          title: const Text("Configurar ubicación de geocerca"),
+          content: const Text("¿Deseas usar esta ubicación para geocercas?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Cancelar"),
             ),
             TextButton(
               onPressed: () async {
@@ -710,7 +724,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   await createGeoFenceLocation();
                 }
               },
-              child: const Text("Confirm"),
+              child: Text("Confirmar", style: TextStyle(color: primaryColor)),
             ),
           ],
         );
@@ -725,21 +739,21 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Delete Geofencing Location"),
-          content: const Text("Do you want to delete this location for Geofencing?"),
+          title: const Text("Eliminar ubicación de geocerca"),
+          content: const Text("¿Deseas eliminar esta ubicación de geocercas?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Cancelar"),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
                 await deleteGeoFenceLocation();
               },
-              child: const Text("Confirm"),
+              child: Text("Confirmar", style: TextStyle(color: primaryColor)),
             ),
           ],
         );

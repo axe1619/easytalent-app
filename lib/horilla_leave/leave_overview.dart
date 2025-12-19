@@ -588,7 +588,7 @@ class _LeaveOverview extends State<LeaveOverview> {
               Positioned(
                 bottom: 80,
                 right: 16,
-                child: FloatingActionButton.extended(
+                child: FloatingActionButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -596,11 +596,7 @@ class _LeaveOverview extends State<LeaveOverview> {
                     );
                   },
                   backgroundColor: primaryColor,
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text(
-                    'Nueva Solicitud',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+                  child: const Icon(Icons.add, color: Colors.white),
                 ),
               ),
           ],
