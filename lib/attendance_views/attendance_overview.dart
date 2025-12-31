@@ -598,6 +598,85 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                           },
                         ),
                       ),
+                      Padding(
+                        padding: EdgeInsets.all(padding),
+                        child: ListView.builder(
+                          itemCount: 3,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border:
+                                          Border.all(color: Colors.grey[50]!),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.shade400
+                                              .withOpacity(0.3),
+                                          spreadRadius: 2,
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Card(
+                                      shape: RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                            color: Colors.white, width: 0.0),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
+                                      color: Colors.white,
+                                      elevation: 0.1,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 40.0,
+                                                  height: 40.0,
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.005,
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Container(
+                                              height: 20.0,
+                                            ),
+                                            const SizedBox(height: 10),
+                                            const SizedBox(
+                                              height: 20.0,
+                                              width: 80.0,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -850,8 +929,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                           : buildNonValidatedAttendance(
                               requestsNonValidAttendance,
                               baseUrl,
-                              _scrollController,
-                              getToken),
+                              getToken,
+                              _scrollController),
                     ],
                   ),
                 ),
@@ -1249,9 +1328,9 @@ Future<void> sendEmail(
 
 Widget buildOvertimeValidate(
     List<Map<String, dynamic>> requestsOvertimeValidate,
-    baseUrl,
-    scrollController,
-    token) {
+    String baseUrl,
+    ScrollController scrollController,
+    String token) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: ListView.builder(
@@ -1725,9 +1804,9 @@ Widget buildOvertimeValidate(
 
 Widget buildNonValidatedAttendance(
     List<Map<String, dynamic>> requestsNonValidAttendance,
-    baseUrl,
-    token,
-    scrollController) {
+    String baseUrl,
+    String token,
+    ScrollController scrollController) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: ListView.builder(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 // import 'package:flutter_face_api_beta/flutter_face_api.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -41,6 +42,31 @@ Future<void> notificationTapBackground(NotificationResponse notificationResponse
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    final exception = details.exception;
+    if (exception is NetworkImageLoadException &&
+        exception.statusCode == 404 &&
+        exception.uri.toString().contains('easytalent')) {
+      debugPrint('Imagen no encontrada (404): ${exception.uri}');
+      return;
+    }
+    if (previousOnError != null) {
+      previousOnError(details);
+    } else {
+      FlutterError.presentError(details);
+    }
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (error is NetworkImageLoadException &&
+        error.statusCode == 404 &&
+        error.uri.toString().contains('easytalent')) {
+      debugPrint('Imagen no encontrada (404): ${error.uri}');
+      return true;
+    }
+    return false;
+  };
 
   await NotificationService.instance.initialize(
     const InitializationSettings(
